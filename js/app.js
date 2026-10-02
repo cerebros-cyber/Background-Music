@@ -1,7 +1,7 @@
 // Oberfläche der Klangkulisse
 import { AudioEngine } from './engine.js';
 import { Store, CATEGORIES, INTENSITY_LEVELS, newScene, uid } from './store.js';
-import { Spotify, parseSpotifyLink } from './spotify.js';
+import { Spotify, parseSpotifyLink, isSpotifyOwnedPlaylist } from './spotify.js';
 import { ScenePlayer } from './player.js';
 
 const store = new Store();
@@ -61,17 +61,19 @@ function seg(options, current, onpick, cls = '') {
 }
 
 let toastTimer;
-function toast(msg, kind = 'info') {
+function toast(msg, kind = 'info', action = null) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  el.replaceChildren(h('span', {}, msg),
+    action ? h('a', { class: 'btn small toast-action', href: action.href, target: '_blank', rel: 'noopener' }, action.label) : null,
+    h('button', { class: 'toast-close', 'aria-label': 'Schließen', onClick: () => (el.className = 'toast') }, '✕'));
   el.className = `toast show ${kind}`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = 'toast'), kind === 'error' ? 6000 : 3000);
+  toastTimer = setTimeout(() => (el.className = 'toast'), kind === 'error' ? (action ? 15000 : 8000) : 3000);
 }
 
 function showError(e) {
   console.error(e);
-  toast(e?.message || String(e), 'error');
+  toast(e?.message || String(e), 'error', e?.openUri ? { label: '🟢 In Spotify öffnen', href: e.openUri } : null);
 }
 
 const currentScene = () => store.scene(state.sceneId) || store.scenes[0] || null;
@@ -221,7 +223,7 @@ function renderMusicCard(scene) {
           changed(scene, { rerender: false });
         },
       })) : null,
-    slot?.kind === 'spotify' ? renderSpotifyControls() : null);
+    slot?.kind === 'spotify' ? renderSpotifyControls(slot) : null);
 }
 
 function renderSourceSelect(scene, mode) {
@@ -231,7 +233,10 @@ function renderSourceSelect(scene, mode) {
   if (slot.kind === 'spotify' && !state.playlists?.some((p) => p.uri === slot.uri)) {
     spotifyOpts.push(h('option', { value: `sp:${slot.uri}` }, `🟢 ${slot.name || slot.uri}`));
   }
-  for (const p of state.playlists || []) spotifyOpts.push(h('option', { value: `sp:${p.uri}` }, `🟢 ${p.name}`));
+  for (const p of state.playlists || []) {
+    const blocked = isSpotifyOwnedPlaylist(p.uri);
+    spotifyOpts.push(h('option', { value: `sp:${p.uri}` }, `${blocked ? '⚠️' : '🟢'} ${p.name}${blocked ? ' (von Spotify – nicht abspielbar)' : ''}`));
+  }
   if (spotify.connected && !state.playlists) spotifyOpts.push(h('option', { value: 'act:load' }, 'Meine Playlists laden …'));
   spotifyOpts.push(h('option', { value: 'act:link' }, 'Spotify-Link einfügen …'));
 
@@ -280,7 +285,7 @@ async function loadPlaylists() {
   toast(`${state.playlists.length} Playlists geladen`);
 }
 
-function renderSpotifyControls() {
+function renderSpotifyControls(slot) {
   if (!spotify.connected) {
     return h('p', { class: 'hint' }, 'Spotify ist nicht verbunden. ',
       h('a', { href: '#', onClick: (e) => { e.preventDefault(); state.view = 'settings'; render(); } }, 'Jetzt in den Einstellungen verbinden.'));
@@ -301,7 +306,7 @@ function renderSpotifyControls() {
     h('div', { class: 'grow' }),
     h('button', { class: 'btn icon', title: 'Zurück', onClick: act(() => spotify.previous()) }, '⏮'),
     h('button', { class: 'btn icon', title: 'Pause', onClick: act(() => spotify.pause()) }, '⏸'),
-    h('button', { class: 'btn icon', title: 'Weiter abspielen', onClick: act(() => spotify.resume()) }, '▶'),
+    h('button', { class: 'btn icon', title: 'Playlist abspielen', onClick: act(() => spotify.play(slot.uri)) }, '▶'),
     h('button', { class: 'btn icon', title: 'Nächster Titel', onClick: act(() => spotify.next()) }, '⏭'));
 }
 

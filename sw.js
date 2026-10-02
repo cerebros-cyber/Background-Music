@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei Änderungen an den Dateien VERSION erhöhen, damit Geräte die neue Fassung laden.
-const VERSION = 'klangkulisse-v1';
+const VERSION = 'klangkulisse-v2';
 const FILES = [
   './',
   'index.html',

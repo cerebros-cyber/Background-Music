@@ -212,15 +212,38 @@ export class Spotify extends EventTarget {
     const devices = await this.devices();
     const chosen = devices.find((d) => d.id === this.deviceId) || devices.find((d) => d.is_active) || devices[0];
     if (!chosen) {
-      throw new Error('Kein Spotify-Gerät gefunden. Öffne die Spotify-App auf dem iPad, spiele kurz etwas ab und versuche es erneut.');
+      throw Object.assign(
+        new Error('Kein Spotify-Gerät gefunden. Öffne die Spotify-App auf dem iPad, spiele kurz etwas ab und versuche es erneut.'),
+        { openUri: 'spotify:' },
+      );
     }
-    return chosen.id;
+    return chosen;
   }
 
   async play(uri) {
-    const device = await this.resolveDevice();
     const body = uri.includes(':track:') || uri.includes(':episode:') ? { uris: [uri] } : { context_uri: uri };
-    await this.api('PUT', `/me/player/play?device_id=${encodeURIComponent(device)}`, body);
+    const device = await this.resolveDevice();
+    const attempt = () => this.api('PUT', `/me/player/play?device_id=${encodeURIComponent(device.id)}`, body);
+    try {
+      return await attempt();
+    } catch (err) {
+      if (err.reason === 'PREMIUM_REQUIRED') throw explainPlayError(err, uri);
+    }
+    // Häufigster Grund: Die Spotify-App ist (von iOS) in den Ruhezustand versetzt worden.
+    // Wiedergabe auf das Gerät übertragen, um es aufzuwecken, dann erneut versuchen.
+    try {
+      await this.api('PUT', '/me/player', { device_ids: [device.id], play: false });
+    } catch { /* weiter versuchen */ }
+    let last;
+    for (const wait of [800, 1600]) {
+      await sleep(wait);
+      try {
+        return await attempt();
+      } catch (err) {
+        last = err;
+      }
+    }
+    throw explainPlayError(last, uri);
   }
 
   async pause() {
@@ -254,6 +277,24 @@ export class Spotify extends EventTarget {
       artist: j.item?.artists?.map((a) => a.name).join(', ') || j.item?.show?.name,
     };
   }
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Von Spotify selbst erstellte Playlists (Daily Mix, „Mix der Woche“, Editorial) sind für eigene Apps gesperrt.
+export const isSpotifyOwnedPlaylist = (uri) => /^spotify:playlist:37i9dQZ[EF]/.test(uri || '');
+
+function explainPlayError(err, uri) {
+  let msg;
+  if (err?.reason === 'PREMIUM_REQUIRED') {
+    msg = 'Zum Fernsteuern der Wiedergabe ist Spotify Premium nötig.';
+  } else if (isSpotifyOwnedPlaylist(uri)) {
+    msg = 'Diese Playlist wurde von Spotify selbst erstellt (z. B. Daily Mix, „Mix der Woche“ oder Spotify-Editorial). Solche Playlists dürfen eigene Apps nicht abspielen. Speichere die Titel in einer eigenen Playlist und wähle diese aus.';
+  } else {
+    msg = 'Spotify konnte die Wiedergabe nicht starten. Meist schläft die Spotify-App auf dem iPad: Öffne sie, starte kurz einen Titel, wechsle zurück und tippe erneut auf ▶.';
+  }
+  const detail = err ? ` (${err.status}${err.reason ? ` ${err.reason}` : ''}: ${err.message})` : '';
+  return Object.assign(new Error(msg + detail), { openUri: uri, status: err?.status, reason: err?.reason });
 }
 
 function readJson(key) {
