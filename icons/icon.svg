@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#3b2a66"/>
+      <stop offset="1" stop-color="#14111c"/>
+    </radialGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9c4ff"/>
+      <stop offset="1" stop-color="#8a63ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- W20 -->
+  <polygon points="256,92 398,174 398,338 256,420 114,338 114,174" fill="none" stroke="url(#g)" stroke-width="14" stroke-linejoin="round"/>
+  <polygon points="256,150 340,296 172,296" fill="none" stroke="url(#g)" stroke-width="10" stroke-linejoin="round" opacity=".8"/>
+  <!-- Schallwellen -->
+  <g fill="none" stroke="#e6b450" stroke-width="14" stroke-linecap="round">
+    <path d="M60 210 q-26 46 0 92"/>
+    <path d="M30 180 q-44 76 0 152" opacity=".6"/>
+    <path d="M452 210 q26 46 0 92"/>
+    <path d="M482 180 q44 76 0 152" opacity=".6"/>
+  </g>
+</svg>
