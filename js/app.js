@@ -374,26 +374,39 @@ function renderLayersCard(scene) {
 }
 
 function renderWeatherCard(scene) {
-  const w = scene.weather;
-  const options = [{ id: null, label: 'Kein', icon: '☀️' }, ...store.soundsIn('weather').map((s) => ({ id: s.id, label: s.name, icon: s.icon }))];
+  const active = new Map(scene.weather.map((w) => [w.soundId, w]));
   return h('div', { class: 'card' },
-    h('h2', {}, 'Wetter'),
-    h('div', { class: 'chips' }, options.map((o) => h('button', {
-      class: `chip ${w.soundId === o.id ? 'on' : ''}`,
-      onClick: () => {
-        w.soundId = o.id;
-        changed(scene);
-      },
-    }, h('span', { class: 'ico' }, o.icon), o.label))),
-    w.soundId ? h('div', { class: 'row' },
-      h('label', { class: 'lbl' }, 'Stärke'),
-      slider({
-        value: w.level, label: 'Wetterstärke',
-        oninput: (v) => {
-          w.level = v;
-          changed(scene, { rerender: false });
+    h('h2', {}, 'Wetter ', h('small', {}, 'mehrere gleichzeitig möglich')),
+    h('div', { class: 'chips' },
+      h('button', {
+        class: `chip ${scene.weather.length ? '' : 'on'}`,
+        onClick: () => {
+          scene.weather = [];
+          changed(scene);
         },
-      })) : null);
+      }, h('span', { class: 'ico' }, '☀️'), 'Kein'),
+      store.soundsIn('weather').map((s) => h('button', {
+        class: `chip ${active.has(s.id) ? 'on' : ''}`, 'aria-pressed': active.has(s.id) ? 'true' : 'false',
+        onClick: () => {
+          scene.weather = active.has(s.id)
+            ? scene.weather.filter((w) => w.soundId !== s.id)
+            : [...scene.weather, { id: uid(), soundId: s.id, level: 0.5 }];
+          changed(scene);
+        },
+      }, h('span', { class: 'ico' }, s.icon), s.name))),
+    scene.weather.map((w) => {
+      const s = store.sound(w.soundId);
+      if (!s) return null;
+      return h('div', { class: 'layer' },
+        h('div', { class: 'layer-name' }, soundLabel(s)),
+        slider({
+          value: w.level, label: `Stärke ${s.name}`,
+          oninput: (v) => {
+            w.level = v;
+            changed(scene, { rerender: false });
+          },
+        }));
+    }));
 }
 
 function renderRandomCard(scene) {
@@ -531,7 +544,7 @@ function openSceneEditor(scene) {
           const copy = structuredClone(scene);
           copy.id = uid();
           copy.name = `${scene.name} (Kopie)`;
-          copy.layers.forEach((l) => (l.id = uid()));
+          [...copy.layers, ...copy.weather].forEach((l) => (l.id = uid()));
           await store.addScene(copy);
           state.sceneId = copy.id;
           close();

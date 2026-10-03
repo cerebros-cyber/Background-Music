@@ -61,6 +61,16 @@ export const INTENSITY_LEVELS = [
 const lib = (soundId) => ({ kind: 'lib', soundId });
 const layer = (soundId, level) => ({ id: uid(), soundId, level });
 
+// Frühere Versionen kannten nur ein Wetter pro Szene: { soundId, level }
+export function normalizeScene(sc) {
+  if (!Array.isArray(sc.weather)) {
+    const w = sc.weather || {};
+    sc.weather = w.soundId ? [{ id: uid(), soundId: w.soundId, level: w.level ?? 0.5 }] : [];
+    return true;
+  }
+  return false;
+}
+
 export function newScene(name = 'Neue Szene') {
   return {
     id: uid(),
@@ -70,7 +80,7 @@ export function newScene(name = 'Neue Szene') {
     intensity: 'normal',
     music: { mode: 'none', volume: 0.8, creepy: lib('syn:creepy'), action: lib('syn:action') },
     layers: [],
-    weather: { soundId: null, level: 0.5 },
+    weather: [],
     random: { soundIds: [], frequency: 0.3 },
     favorites: [],
   };
@@ -87,13 +97,13 @@ export function defaultScenes() {
   return [
     scene('Taverne', '🍺', '#d39445', {
       layers: [layer('syn:tavern', 0.6), layer('syn:fire', 0.3)],
-      weather: { soundId: 'syn:rain', level: 0.25 },
+      weather: [layer('syn:rain', 0.25)],
       favorites: ['syn:laugh', 'syn:giggle', 'syn:sword', 'syn:knock', 'syn:creak'],
     }),
     scene('Nächtlicher Wald', '🌲', '#3f6b52', {
       music: { mode: 'creepy' },
       layers: [layer('syn:nightforest', 0.6)],
-      weather: { soundId: 'syn:wind', level: 0.3 },
+      weather: [layer('syn:wind', 0.3)],
       random: { soundIds: ['syn:wolf', 'syn:raven'], frequency: 0.25 },
       favorites: ['syn:wolf', 'syn:raven', 'syn:scream', 'syn:growl', 'syn:giggle'],
     }),
@@ -107,18 +117,18 @@ export function defaultScenes() {
       intensity: 'intense',
       music: { mode: 'action' },
       layers: [layer('syn:fire', 0.2)],
-      weather: { soundId: 'syn:wind', level: 0.3 },
+      weather: [layer('syn:wind', 0.3)],
       favorites: ['syn:sword', 'syn:explosion', 'syn:growl', 'syn:scream', 'syn:magic', 'syn:thunder'],
     }),
     scene('Sturm auf See', '🌊', '#4f7a8a', {
       layers: [layer('syn:ocean', 0.8)],
-      weather: { soundId: 'syn:storm', level: 0.7 },
+      weather: [layer('syn:storm', 0.7)],
       favorites: ['syn:thunder', 'syn:scream', 'syn:bell'],
     }),
     scene('Friedliche Reise', '🌄', '#7f9a5a', {
       intensity: 'calm',
       layers: [layer('syn:dayforest', 0.6), layer('syn:stream', 0.4)],
-      weather: { soundId: 'syn:wind', level: 0.15 },
+      weather: [layer('syn:wind', 0.15)],
       favorites: ['syn:raven', 'syn:wolf', 'syn:magic'],
     }),
     scene('Lagerfeuer bei Nacht', '🔥', '#b5652c', {
@@ -158,6 +168,7 @@ export class Store {
     this.scenes = scenes || defaultScenes();
     let migrated = false;
     for (const sc of this.scenes) {
+      if (normalizeScene(sc)) migrated = true;
       if (OLD_COLORS[sc.color]) {
         sc.color = OLD_COLORS[sc.color];
         migrated = true;
@@ -279,7 +290,7 @@ export class Store {
     }
     for (const sc of this.scenes) {
       sc.layers = sc.layers.filter((l) => l.soundId !== id);
-      if (sc.weather.soundId === id) sc.weather.soundId = null;
+      sc.weather = sc.weather.filter((l) => l.soundId !== id);
       sc.random.soundIds = sc.random.soundIds.filter((x) => x !== id);
       sc.favorites = sc.favorites.filter((x) => x !== id);
       for (const slot of ['creepy', 'action']) {
@@ -329,6 +340,7 @@ export class Store {
       await db.put('files', id, { name: f.name, type: f.type, data: base64ToBuf(f.data) });
     }
     this.scenes = data.scenes || defaultScenes();
+    this.scenes.forEach(normalizeScene);
     this.userSounds = data.sounds || [];
     this.builtins = { hidden: [], overrides: {}, ...(data.builtins || {}) };
     this.settings = { ...structuredClone(DEFAULT_SETTINGS), ...(data.settings || {}) };

@@ -13,7 +13,7 @@ export class ScenePlayer extends EventTarget {
     this.sceneId = null;
     this.music = null; // { key, handle?, spotify? }
     this.layers = new Map(); // layerId -> { soundId, handle }
-    this.weather = null; // { soundId, handle }
+    this.weather = new Map(); // weatherId -> { soundId, handle }
     this.randomTimer = null;
     this.wakeLock = null;
   }
@@ -62,8 +62,8 @@ export class ScenePlayer extends EventTarget {
   stopLayers(fade) {
     for (const l of this.layers.values()) l.handle.stop(fade);
     this.layers.clear();
-    this.weather?.handle.stop(fade);
-    this.weather = null;
+    for (const w of this.weather.values()) w.handle.stop(fade);
+    this.weather.clear();
     clearTimeout(this.randomTimer);
     this.randomTimer = null;
   }
@@ -74,50 +74,37 @@ export class ScenePlayer extends EventTarget {
     const lvl = this.intensityOf(scene);
     const fade = this.fade;
 
-    // Hintergrund-Ebenen
-    const wanted = new Map(scene.layers.map((l) => [l.id, l]));
-    for (const [id, cur] of this.layers) {
+    this.syncSet(this.layers, scene.layers, 'ambience', lvl.factor, fade);
+    this.syncSet(this.weather, scene.weather, 'weather', lvl.factor, fade);
+
+    this.syncMusic(scene, lvl);
+
+    if (!this.randomTimer) this.scheduleRandom(true);
+  }
+
+  // Laufende Ebenen (Hintergrund oder Wetter) mit der Liste der Szene abgleichen
+  syncSet(running, items, bus, factor, fade) {
+    const wanted = new Map(items.map((l) => [l.id, l]));
+    for (const [id, cur] of running) {
       const w = wanted.get(id);
       if (!w || w.soundId !== cur.soundId) {
         cur.handle.stop(fade);
-        this.layers.delete(id);
+        running.delete(id);
       }
     }
-    for (const l of scene.layers) {
-      const level = clamp01(l.level * lvl.factor);
-      const cur = this.layers.get(l.id);
+    for (const l of items) {
+      const level = clamp01(l.level * factor);
+      const cur = running.get(l.id);
       if (cur) {
         cur.handle.setLevel(level);
         continue;
       }
       const sound = this.store.sound(l.soundId);
       if (!sound) continue;
-      const handle = this.engine.startLoop(sound, 'ambience', { level, fade });
+      const handle = this.engine.startLoop(sound, bus, { level, fade });
       handle.ready.catch((e) => this.error(e));
-      this.layers.set(l.id, { soundId: l.soundId, handle });
+      running.set(l.id, { soundId: l.soundId, handle });
     }
-
-    // Wetter
-    const wid = scene.weather.soundId;
-    const wLevel = clamp01(scene.weather.level * lvl.factor);
-    if (this.weather && this.weather.soundId !== wid) {
-      this.weather.handle.stop(fade);
-      this.weather = null;
-    }
-    if (wid && !this.weather) {
-      const sound = this.store.sound(wid);
-      if (sound) {
-        const handle = this.engine.startLoop(sound, 'weather', { level: wLevel, fade });
-        handle.ready.catch((e) => this.error(e));
-        this.weather = { soundId: wid, handle };
-      }
-    } else if (this.weather) {
-      this.weather.handle.setLevel(wLevel);
-    }
-
-    this.syncMusic(scene, lvl);
-
-    if (!this.randomTimer) this.scheduleRandom(true);
   }
 
   syncMusic(scene, lvl) {

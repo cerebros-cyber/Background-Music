@@ -15,7 +15,7 @@ sind nicht nötig.
   - **Musik:** *Keine*, *Unheimlich* oder *Action*. Für jede Musikart lässt sich die Quelle wählen: eingebaute Musik, eigene Audiodatei oder eine **Spotify**-Playlist.
   - **Hintergrundgeräusche** (Taverne, Lagerfeuer, Bach, Meer, Höhle, Verlies, Nacht- und Tagwald …) – beliebig viele gleichzeitig, jede mit eigener Intensität.
   - **Intensität** der ganzen Szene: *Ruhig*, *Normal*, *Intensiv* (beeinflusst Dichte und Lautstärke aller Geräusche und die Energie der Musik).
-  - **Wetter:** Regen, Wind, Gewitter, Schneesturm – mit Stärke-Regler.
+  - **Wetter:** Regen, Wind, Gewitter, Schneesturm – beliebig kombinierbar, jedes mit eigenem Stärke-Regler.
   - **Nebengeräusche:** ausgewählte Einzelgeräusche erklingen zufällig „aus der Ferne“ (z. B. Wolfsgeheul im Nachtwald), Häufigkeit einstellbar.
 - **Soundboard für Einzelgeräusche:** Schrei, Böses Lachen, Kichern, Wolfsgeheul, Rabe, Geisterstöhnen, Knurren, Knarrende Tür, Klopfen, Schwertklirren, Explosion, Donner, Zauber, Herzschlag, Glockenschlag. Pro Szene lassen sich Favoriten festlegen.
 - **Bibliothek frei bearbeitbar:** Alle Sounds – auch die eingebauten Grundsounds – lassen sich umbenennen, mit einem anderen Symbol versehen, durch eine eigene Audiodatei ersetzen (Szenen bleiben verknüpft) oder löschen. Gelöschte oder veränderte Grundsounds lassen sich jederzeit wiederherstellen.
