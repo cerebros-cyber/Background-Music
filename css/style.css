@@ -120,6 +120,9 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
 .btn.big { min-height: 50px; padding: 0 22px; font-size: 16px; }
 .btn.small { min-height: 34px; padding: 0 12px; font-size: 12px; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.glyph { width: 1em; height: 1em; flex: none; }
+.btn.icon .glyph { width: 18px; height: 18px; }
+.btn.big .glyph { width: 15px; height: 15px; }
 
 .seg { display: inline-flex; background: rgba(6, 8, 10, .7); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; gap: 3px; }
 .seg button {

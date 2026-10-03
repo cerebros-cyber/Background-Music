@@ -24,6 +24,16 @@ const COLORS = ['#d39445', '#a33a34', '#7f9a5a', '#4f7a8a', '#6f8496', '#8a6a9e'
 
 const SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg>';
 
+// Eigene Symbole statt ▶ ⏹ ⏸ …: iOS zeigt diese Zeichen sonst als bunte Emoji-Kästchen
+const GLYPHS = {
+  play: '<path d="M7 4.5v15l12.5-7.5z"/>',
+  stop: '<rect x="5.5" y="5.5" width="13" height="13" rx="1"/>',
+  pause: '<rect x="6" y="5" width="4.2" height="14" rx="1"/><rect x="13.8" y="5" width="4.2" height="14" rx="1"/>',
+  prev: '<rect x="5" y="5" width="2.6" height="14" rx="1"/><path d="M19 5v14L8.5 12z"/>',
+  next: '<rect x="16.4" y="5" width="2.6" height="14" rx="1"/><path d="M5 5v14L15.5 12z"/>',
+};
+const glyph = (name) => svg(`<svg class="glyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${GLYPHS[name]}</svg>`);
+
 function svg(markup) {
   const t = document.createElement('template');
   t.innerHTML = markup;
@@ -141,7 +151,7 @@ function renderTopbar() {
         stopPreviews();
         render();
       },
-    }, '■', h('span', { class: 'hide-sm' }, ' Alles stoppen')));
+    }, glyph('stop'), h('span', { class: 'hide-sm' }, 'Alles stoppen')));
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +203,7 @@ function renderScenePanel(scene) {
           else player.start(scene).catch(showError);
           render();
         },
-      }, playing ? '■ Stoppen' : '▶ Starten')),
+      }, glyph(playing ? 'stop' : 'play'), playing ? 'Stoppen' : 'Starten')),
     h('div', { class: 'card intensity' },
       h('h2', {}, 'Intensität'),
       seg(INTENSITY_LEVELS, scene.intensity, (id) => {
@@ -314,10 +324,10 @@ function renderSpotifyControls(slot) {
     h('span', { class: 'sp-logo' }, '🟢'),
     now,
     h('div', { class: 'grow' }),
-    h('button', { class: 'btn icon', title: 'Zurück', onClick: act(() => spotify.previous()) }, '⏮'),
-    h('button', { class: 'btn icon', title: 'Pause', onClick: act(() => spotify.pause()) }, '⏸'),
-    h('button', { class: 'btn icon', title: 'Playlist abspielen', onClick: act(() => spotify.play(slot.uri)) }, '▶'),
-    h('button', { class: 'btn icon', title: 'Nächster Titel', onClick: act(() => spotify.next()) }, '⏭'));
+    h('button', { class: 'btn icon', title: 'Zurück', onClick: act(() => spotify.previous()) }, glyph('prev')),
+    h('button', { class: 'btn icon', title: 'Pause', onClick: act(() => spotify.pause()) }, glyph('pause')),
+    h('button', { class: 'btn icon', title: 'Playlist abspielen', onClick: act(() => spotify.play(slot.uri)) }, glyph('play')),
+    h('button', { class: 'btn icon', title: 'Nächster Titel', onClick: act(() => spotify.next()) }, glyph('next')));
 }
 
 async function refreshNowPlaying() {
@@ -325,7 +335,7 @@ async function refreshNowPlaying() {
   if (!el || !spotify.connected) return;
   try {
     const np = await spotify.nowPlaying();
-    el.textContent = np?.title ? `${np.playing ? '' : '⏸ '}${np.title} – ${np.artist}${np.device ? ` · ${np.device}` : ''}` : 'Gerade läuft nichts';
+    el.textContent = np?.title ? `${np.playing ? '' : 'Pausiert: '}${np.title} – ${np.artist}${np.device ? ` · ${np.device}` : ''}` : 'Gerade läuft nichts';
   } catch {
     el.textContent = 'Status nicht verfügbar';
   }
@@ -448,7 +458,7 @@ function renderBoard(scene) {
     h('div', { class: 'board-head' },
       h('div', { class: 'section-title' }, 'Einzelgeräusche'),
       h('div', { class: 'grow' }),
-      h('button', { class: 'btn icon ghost', title: 'Einzelgeräusche stoppen', onClick: () => engine.stopOneShots() }, '⏹')),
+      h('button', { class: 'btn icon ghost', title: 'Einzelgeräusche stoppen', onClick: () => engine.stopOneShots() }, glyph('stop'))),
     seg([{ id: 'scene', label: 'Szene' }, { id: 'all', label: 'Alle' }], state.boardFilter, (id) => {
       state.boardFilter = id;
       render();
@@ -621,7 +631,7 @@ function renderLibrary() {
               showError(e);
             }
           },
-        }, previewing ? '■' : '▶'),
+        }, glyph(previewing ? 'stop' : 'play')),
         h('button', { class: 'btn icon ghost', title: 'Bearbeiten', onClick: () => openSoundEditor(s) }, '✎'),
         h('button', { class: 'btn icon ghost', title: 'Löschen', onClick: () => deleteSound(s) }, '🗑'));
     })),
@@ -792,7 +802,7 @@ function renderSettings() {
       h('h2', {}, 'Datensicherung'),
       h('p', { class: 'hint' }, 'Szenen, eigene Sounds und Einstellungen werden auf diesem Gerät gespeichert. Mit einer Sicherung kannst du sie auf ein anderes Gerät übertragen.'),
       h('div', { class: 'btn-row' },
-        h('button', { class: 'btn', onClick: () => exportBackup().catch(showError) }, '⬇ Sicherung exportieren'),
+        h('button', { class: 'btn', onClick: () => exportBackup().catch(showError) }, '↓ Sicherung exportieren'),
         h('label', { class: 'btn' }, h('input', {
           type: 'file', accept: '.json,application/json', class: 'hidden',
           onChange: async (e) => {
@@ -809,7 +819,7 @@ function renderSettings() {
               showError(err);
             }
           },
-        }), '⬆ Sicherung laden'),
+        }), '↑ Sicherung laden'),
         h('button', {
           class: 'btn danger',
           onClick: async () => {
