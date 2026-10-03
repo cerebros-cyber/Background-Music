@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei Änderungen an den Dateien VERSION erhöhen, damit Geräte die neue Fassung laden.
-const VERSION = 'klangkulisse-v3';
+const VERSION = 'cerebros-v4';
 const FILES = [
   './',
   'index.html',
@@ -20,8 +20,10 @@ const FILES = [
   'fonts/EBGaramond-normal.woff2',
   'fonts/EBGaramond-italic.woff2',
   'img/backdrop.jpg',
-  'icons/logo.svg',
-  'icons/icon.svg',
+  'img/cerebros-logo.webp',
+  'img/cerebros-logo-96.png',
+  'icons/favicon-64.png',
+  'icons/icon-maskable-512.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',

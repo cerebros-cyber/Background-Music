@@ -50,6 +50,15 @@ export class ScenePlayer extends EventTarget {
     this.emit();
   }
 
+  // Alle Ebenen der laufenden Szene neu starten (z. B. nachdem ein Sound ersetzt wurde)
+  refresh() {
+    const scene = this.store.scene(this.sceneId);
+    if (!scene) return;
+    this.stopLayers(0.4);
+    if (!this.music?.spotify) this.stopMusic(0.4);
+    this.sync(scene);
+  }
+
   stopLayers(fade) {
     for (const l of this.layers.values()) l.handle.stop(fade);
     this.layers.clear();

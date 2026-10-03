@@ -1,4 +1,4 @@
-/* Klangkulisse – düsteres Design im Stil der Logtown-Kampagne:
+/* Cerebros Soundboard – düsteres Design im Stil der Logtown-Kampagne:
    Schiefer, Nebel, Eisen und das Glutlicht der Fenster an der Steilküste. */
 
 @font-face { font-family: 'Cinzel'; src: url(../fonts/Cinzel-normal.woff2) format('woff2'); font-weight: 400 900; font-display: swap; }
@@ -62,7 +62,8 @@ button, label.btn, .pad, .chip { user-select: none; -webkit-user-select: none; c
 a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-underline-offset: 3px; }
 .hidden { display: none !important; }
 .grow { flex: 1; }
-.loading { display: grid; place-items: center; height: 100vh; font: 22px var(--display); letter-spacing: 3px; color: var(--muted); }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; height: 100vh; font: 600 18px var(--display); letter-spacing: 4px; text-transform: uppercase; color: var(--muted); }
+.loading img { width: min(260px, 60vw); filter: drop-shadow(0 0 30px rgba(211, 148, 69, .25)); }
 
 /* Emojis wirken entsättigt wie in Stein gehauen und glimmen nur, wenn aktiv */
 .ico, .scene-icon, .pad-icon, .lib-icon, .scene-head-icon, .icon-opt, .icon-input {
@@ -84,8 +85,9 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
   box-shadow: 0 1px 0 rgba(0, 0, 0, .6), 0 8px 24px rgba(0, 0, 0, .45);
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.logo { width: 34px; height: 34px; flex: none; }
-.brand-name { font: 600 19px var(--display); letter-spacing: 3px; text-transform: uppercase; color: var(--text); text-shadow: 0 0 18px rgba(211, 148, 69, .25); }
+.logo { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 0 8px rgba(211, 148, 69, .25)) drop-shadow(0 2px 4px rgba(0, 0, 0, .8)); }
+.brand-name { display: flex; flex-direction: column; line-height: 1; font: 700 20px/1 var(--display); letter-spacing: 3px; text-transform: uppercase; color: #ecdcb8; text-shadow: 0 0 18px rgba(211, 148, 69, .3); }
+.brand-name small { font: 500 10px/1.4 var(--display); letter-spacing: 5.2px; color: var(--ember); margin-top: 3px; }
 .master { display: flex; align-items: center; gap: 10px; margin-left: auto; width: 230px; color: var(--muted); }
 .master svg { width: 20px; height: 20px; flex: none; }
 .stop-all { white-space: nowrap; }
@@ -257,7 +259,7 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
 .pad.hit .pad-icon { filter: grayscale(.2) sepia(.45) brightness(1.15) drop-shadow(0 0 10px var(--ember)); }
 .pad.add { border-style: dashed; background: transparent; color: var(--muted); box-shadow: none; }
 .pad-icon { font-size: 32px; line-height: 1; }
-.pad-name { font: 15px/1.1 var(--serif); text-align: center; color: #c9c2b4; max-width: 100%; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+.pad-name { font: 14px/1.1 var(--serif); text-align: center; color: #c9c2b4; max-width: 100%; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
 
 /* --- Bibliothek & Einstellungen --------------------------------------------- */
 
@@ -290,6 +292,7 @@ details[open] { display: flex; flex-direction: column; gap: 8px; }
 .modal-foot { display: flex; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
 .field { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font: 600 12px var(--display); letter-spacing: 2px; text-transform: uppercase; }
 .field .input { color: var(--text); text-transform: none; letter-spacing: 0; }
+.field .hint { font: italic 16px var(--serif); text-transform: none; letter-spacing: 0; }
 .field .chip { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .icon-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .icon-input { width: 70px; text-align: center; font-size: 24px; }

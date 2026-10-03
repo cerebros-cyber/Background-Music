@@ -1,8 +1,10 @@
-# 🐉 Klangkulisse
+# Cerebros Soundboard
+
+<img src="img/cerebros-logo.webp" alt="Cerebros" width="220">
 
 Klangkulissen, Musik und Soundeffekte für Tabletop-Rollenspiele – gebaut für das iPad.
 
-Klangkulisse ist eine Web-App (PWA): Man öffnet sie in Safari, legt sie auf den Home-Bildschirm
+Das Cerebros Soundboard ist eine Web-App (PWA): Man öffnet sie in Safari, legt sie auf den Home-Bildschirm
 und nutzt sie dann wie eine normale App – im Vollbild und offline. Ein Mac, Xcode oder der App Store
 sind nicht nötig.
 
@@ -16,6 +18,7 @@ sind nicht nötig.
   - **Wetter:** Regen, Wind, Gewitter, Schneesturm – mit Stärke-Regler.
   - **Nebengeräusche:** ausgewählte Einzelgeräusche erklingen zufällig „aus der Ferne“ (z. B. Wolfsgeheul im Nachtwald), Häufigkeit einstellbar.
 - **Soundboard für Einzelgeräusche:** Schrei, Böses Lachen, Kichern, Wolfsgeheul, Rabe, Geisterstöhnen, Knurren, Knarrende Tür, Klopfen, Schwertklirren, Explosion, Donner, Zauber, Herzschlag, Glockenschlag. Pro Szene lassen sich Favoriten festlegen.
+- **Bibliothek frei bearbeitbar:** Alle Sounds – auch die eingebauten Grundsounds – lassen sich umbenennen, mit einem anderen Symbol versehen, durch eine eigene Audiodatei ersetzen (Szenen bleiben verknüpft) oder löschen. Gelöschte oder veränderte Grundsounds lassen sich jederzeit wiederherstellen.
 - **Erweiterbar:** neue Szenen anlegen, duplizieren, löschen; eigene Audiodateien (MP3, M4A, AAC, WAV, OGG, OPUS, FLAC …) in jede Kategorie importieren. OGG/OPUS-Dateien, die das iPad nicht selbst abspielen kann, werden beim Import einmalig in WAV umgewandelt (dadurch größer im Speicher) – als Musik, Hintergrund, Wetter oder Einzelgeräusch.
 - **Mischpult:** getrennte Lautstärken für Musik, Hintergrund, Wetter und Einzelgeräusche; „Alles stoppen“-Knopf.
 - **Datensicherung:** Szenen und eigene Sounds als Datei exportieren und auf einem anderen Gerät wieder einlesen.
@@ -29,7 +32,7 @@ oder [pixabay.com](https://pixabay.com/sound-effects/) (Lizenzen beachten).
 
 1. App veröffentlichen (siehe unten) und die Adresse in **Safari** öffnen.
 2. **Teilen** → **Zum Home-Bildschirm**.
-3. Klangkulisse über das neue Symbol starten.
+3. Das Cerebros Soundboard über das neue Symbol starten.
 
 Tipps für den Spieleabend:
 - Das iPad nicht in den Ruhezustand gehen lassen – die App hält den Bildschirm während der Wiedergabe wach (Einstellung).
@@ -53,13 +56,13 @@ Lokal testen: `npx http-server .` und `http://localhost:8080` öffnen.
 
 Die App steuert über die offizielle Spotify-Web-API die **Spotify-App** (Spotify Connect). Die Musik
 läuft also in der Spotify-App auf dem iPad (oder z. B. auf einem Spotify-fähigen Lautsprecher), während
-Klangkulisse Geräusche darüber mischt. Voraussetzung ist **Spotify Premium**.
+das Soundboard Geräusche darüber mischt. Voraussetzung ist **Spotify Premium**.
 
 Einmalige Einrichtung:
 
 1. Auf [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) anmelden und **Create app** wählen (Name beliebig, API: *Web API*).
-2. Als **Redirect URI** die Adresse eintragen, die in Klangkulisse unter *Einstellungen → Spotify* angezeigt wird (z. B. `https://<benutzer>.github.io/<repository>/`).
-3. Die **Client ID** in Klangkulisse eintragen und auf **Verbinden** tippen.
+2. Als **Redirect URI** die Adresse eintragen, die im Soundboard unter *Einstellungen → Spotify* angezeigt wird (z. B. `https://<benutzer>.github.io/<repository>/`).
+3. Die **Client ID** im Soundboard eintragen und auf **Verbinden** tippen.
 4. In einer Szene bei *Unheimlich* oder *Action* als Quelle eine Playlist wählen („Meine Playlists laden …“ oder „Spotify-Link einfügen …“).
 
 Falls die Anmeldung in der installierten Home-Bildschirm-App nicht zurückkehrt: Die App in Safari

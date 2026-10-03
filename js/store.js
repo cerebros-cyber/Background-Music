@@ -141,16 +141,20 @@ export class Store {
   constructor() {
     this.scenes = [];
     this.userSounds = [];
+    // Änderungen an Grundsounds: ausgeblendete IDs und Überschreibungen (Name, Symbol, eigene Audiodatei)
+    this.builtins = { hidden: [], overrides: {} };
     this.settings = structuredClone(DEFAULT_SETTINGS);
     this.timers = {};
   }
 
   async load() {
-    const [scenes, sounds, settings] = await Promise.all([
+    const [scenes, sounds, settings, builtins] = await Promise.all([
       db.get('meta', 'scenes'),
       db.get('meta', 'sounds'),
       db.get('meta', 'settings'),
+      db.get('meta', 'builtins'),
     ]);
+    this.builtins = { hidden: [], overrides: {}, ...(builtins || {}) };
     this.scenes = scenes || defaultScenes();
     let migrated = false;
     for (const sc of this.scenes) {
@@ -168,7 +172,7 @@ export class Store {
   }
 
   persist(key) {
-    const value = { scenes: this.scenes, sounds: this.userSounds, settings: this.settings }[key];
+    const value = { scenes: this.scenes, sounds: this.userSounds, settings: this.settings, builtins: this.builtins }[key];
     return db.put('meta', key, structuredClone(value));
   }
 
@@ -179,7 +183,19 @@ export class Store {
   }
 
   get sounds() {
-    return [...BUILTIN_SOUNDS, ...this.userSounds];
+    const { hidden, overrides } = this.builtins;
+    const builtins = BUILTIN_SOUNDS.filter((b) => !hidden.includes(b.id)).map((b) => {
+      const o = overrides[b.id];
+      if (!o) return b;
+      const merged = { ...b, ...o, modified: true };
+      if (o.fileId) delete merged.synth;
+      return merged;
+    });
+    return [...builtins, ...this.userSounds];
+  }
+
+  get hiddenBuiltins() {
+    return BUILTIN_SOUNDS.filter((b) => this.builtins.hidden.includes(b.id));
   }
 
   sound(id) {
@@ -211,28 +227,70 @@ export class Store {
     return sound;
   }
 
+  isBuiltin(id) {
+    return BUILTIN_SOUNDS.some((b) => b.id === id);
+  }
+
   async updateSound(id, patch) {
+    if (this.isBuiltin(id)) {
+      this.builtins.overrides[id] = { ...this.builtins.overrides[id], ...patch };
+      return this.persist('builtins');
+    }
     const s = this.userSounds.find((x) => x.id === id);
     if (!s) return;
     Object.assign(s, patch);
     await this.persist('sounds');
   }
 
+  // Audio eines Sounds durch eine Datei ersetzen – Szenen behalten ihre Verweise
+  async replaceAudio(id, file) {
+    const { data, type, name } = await prepareImport(file);
+    const fileId = uid();
+    await db.put('files', fileId, { name, type, data });
+    const old = this.isBuiltin(id) ? this.builtins.overrides[id]?.fileId : this.userSounds.find((x) => x.id === id)?.fileId;
+    if (old) await db.del('files', old);
+    await this.updateSound(id, { fileId });
+  }
+
+  // Grundsound auf den Auslieferungszustand zurücksetzen
+  async restoreBuiltin(id) {
+    const o = this.builtins.overrides[id];
+    if (o?.fileId) await db.del('files', o.fileId);
+    delete this.builtins.overrides[id];
+    await this.persist('builtins');
+  }
+
+  async unhideBuiltins(ids) {
+    this.builtins.hidden = this.builtins.hidden.filter((x) => !ids.includes(x));
+    await this.persist('builtins');
+  }
+
   async deleteSound(id) {
-    const s = this.userSounds.find((x) => x.id === id);
-    if (!s) return;
-    this.userSounds = this.userSounds.filter((x) => x.id !== id);
-    await db.del('files', s.fileId);
+    if (this.isBuiltin(id)) {
+      await this.restoreBuiltin(id);
+      this.builtins.hidden.push(id);
+      await this.persist('builtins');
+    } else {
+      const s = this.userSounds.find((x) => x.id === id);
+      if (!s) return;
+      this.userSounds = this.userSounds.filter((x) => x.id !== id);
+      await db.del('files', s.fileId);
+      await this.persist('sounds');
+    }
     for (const sc of this.scenes) {
       sc.layers = sc.layers.filter((l) => l.soundId !== id);
       if (sc.weather.soundId === id) sc.weather.soundId = null;
       sc.random.soundIds = sc.random.soundIds.filter((x) => x !== id);
       sc.favorites = sc.favorites.filter((x) => x !== id);
       for (const slot of ['creepy', 'action']) {
-        if (sc.music[slot]?.soundId === id) sc.music[slot] = lib(`syn:${slot}`);
+        if (sc.music[slot]?.soundId === id) {
+          const alt = this.soundsIn(slot)[0];
+          sc.music[slot] = lib(alt ? alt.id : `syn:${slot}`);
+          if (!alt && sc.music.mode === slot) sc.music.mode = 'none';
+        }
       }
     }
-    await Promise.all([this.persist('sounds'), this.persist('scenes')]);
+    await this.persist('scenes');
   }
 
   async addScene(sc) {
@@ -253,25 +311,28 @@ export class Store {
 
   async exportBackup() {
     const files = {};
-    for (const s of this.userSounds) {
-      const rec = await db.get('files', s.fileId);
-      if (rec) files[s.fileId] = { name: rec.name, type: rec.type, data: bufToBase64(rec.data) };
+    const fileIds = [...this.userSounds, ...Object.values(this.builtins.overrides)].map((x) => x.fileId).filter(Boolean);
+    for (const fileId of fileIds) {
+      const rec = await db.get('files', fileId);
+      if (rec) files[fileId] = { name: rec.name, type: rec.type, data: bufToBase64(rec.data) };
     }
     const settings = { ...this.settings };
-    return JSON.stringify({ app: 'klangkulisse', version: 1, scenes: this.scenes, sounds: this.userSounds, settings, files });
+    // Kennung „klangkulisse“ bleibt, damit ältere Sicherungen weiter lesbar sind
+    return JSON.stringify({ app: 'klangkulisse', version: 2, scenes: this.scenes, sounds: this.userSounds, builtins: this.builtins, settings, files });
   }
 
   async importBackup(text) {
     const data = JSON.parse(text);
-    if (data.app !== 'klangkulisse') throw new Error('Das ist keine Klangkulisse-Sicherung.');
+    if (data.app !== 'klangkulisse') throw new Error('Das ist keine Sicherung des Cerebros Soundboards.');
     await db.clear('files');
     for (const [id, f] of Object.entries(data.files || {})) {
       await db.put('files', id, { name: f.name, type: f.type, data: base64ToBuf(f.data) });
     }
     this.scenes = data.scenes || defaultScenes();
     this.userSounds = data.sounds || [];
+    this.builtins = { hidden: [], overrides: {}, ...(data.builtins || {}) };
     this.settings = { ...structuredClone(DEFAULT_SETTINGS), ...(data.settings || {}) };
-    await Promise.all([this.persist('scenes'), this.persist('sounds'), this.persist('settings')]);
+    await Promise.all([this.persist('scenes'), this.persist('sounds'), this.persist('builtins'), this.persist('settings')]);
   }
 }
 

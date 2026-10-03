@@ -1,4 +1,4 @@
-// Oberfläche der Klangkulisse
+// Oberfläche des Cerebros Soundboards
 import { AudioEngine } from './engine.js';
 import { Store, CATEGORIES, INTENSITY_LEVELS, newScene, uid } from './store.js';
 import { Spotify, parseSpotifyLink, isSpotifyOwnedPlaylist } from './spotify.js';
@@ -116,7 +116,8 @@ function renderTopbar() {
     { id: 'settings', label: 'Einstellungen' },
   ];
   return h('header', { class: 'topbar' },
-    h('div', { class: 'brand' }, h('img', { class: 'logo', src: 'icons/logo.svg', alt: '' }), h('span', { class: 'brand-name' }, 'Klangkulisse')),
+    h('div', { class: 'brand' }, h('img', { class: 'logo', src: 'img/cerebros-logo-96.png', alt: 'Cerebros' }),
+      h('span', { class: 'brand-name' }, 'Cerebros', h('small', {}, 'Soundboard'))),
     seg(nav, state.view, (id) => {
       stopPreviews();
       state.view = id;
@@ -584,7 +585,7 @@ function renderLibrary() {
       const previewing = state.previews.has(s.id);
       return h('div', { class: 'lib-row' },
         h('span', { class: 'lib-icon' }, s.icon),
-        h('div', { class: 'lib-name' }, s.name, h('small', {}, s.builtin ? 'Eingebaut (synthetisch)' : 'Eigene Datei')),
+        h('div', { class: 'lib-name' }, s.name, h('small', {}, soundOrigin(s))),
         h('button', {
           class: `btn icon ${previewing ? 'danger' : ''}`, title: 'Vorhören',
           onClick: async () => {
@@ -607,29 +608,10 @@ function renderLibrary() {
             }
           },
         }, previewing ? '■' : '▶'),
-        s.builtin ? null : h('button', {
-          class: 'btn icon ghost', title: 'Umbenennen',
-          onClick: async () => {
-            const name = prompt('Name', s.name);
-            if (name == null) return;
-            const icon = prompt('Symbol (Emoji)', s.icon);
-            await store.updateSound(s.id, { name: name.trim() || s.name, icon: (icon || s.icon).trim() });
-            render();
-          },
-        }, '✎'),
-        s.builtin ? null : h('button', {
-          class: 'btn icon ghost', title: 'Löschen',
-          onClick: async () => {
-            if (!confirm(`„${s.name}“ löschen? Er wird auch aus allen Szenen entfernt.`)) return;
-            state.previews.get(s.id)?.stop(0.2);
-            state.previews.delete(s.id);
-            engine.forget(s.id);
-            await store.deleteSound(s.id);
-            if (player.playing) player.sync(store.scene(player.sceneId));
-            render();
-          },
-        }, '🗑'));
+        h('button', { class: 'btn icon ghost', title: 'Bearbeiten', onClick: () => openSoundEditor(s) }, '✎'),
+        h('button', { class: 'btn icon ghost', title: 'Löschen', onClick: () => deleteSound(s) }, '🗑'));
     })),
+    renderHiddenBuiltins(cat),
     h('div', { class: 'card tip' },
       h('h2', {}, 'Wo bekomme ich passende Sounds?'),
       h('p', {}, 'Kostenlose Geräusche und Musik findest du z. B. bei ',
@@ -638,6 +620,115 @@ function renderLibrary() {
         h('a', { href: 'https://pixabay.com/sound-effects/', target: '_blank', rel: 'noopener' }, 'pixabay.com'),
         '. Lade die Datei in die Dateien-App deines iPads und importiere sie hier. Unterstützt werden u. a. MP3, M4A, AAC, WAV, OGG und OPUS (OGG wird beim Import einmalig umgewandelt). Achte auf die jeweilige Lizenz.'),
       h('p', {}, 'Tipp: Für Hintergrund- und Musikschleifen eignen sich Dateien von 1–5 Minuten am besten; sehr lange Dateien brauchen viel Arbeitsspeicher.')));
+}
+
+function soundOrigin(s) {
+  if (!s.builtin) return 'Eigene Datei';
+  if (s.fileId) return 'Grundsound · durch eigene Datei ersetzt';
+  return s.modified ? 'Grundsound (synthetisch) · bearbeitet' : 'Grundsound (synthetisch)';
+}
+
+function renderHiddenBuiltins(cat) {
+  const hidden = store.hiddenBuiltins.filter((b) => b.category === cat);
+  if (!hidden.length) return null;
+  return h('div', { class: 'card' },
+    h('h2', {}, 'Gelöschte Grundsounds'),
+    h('div', { class: 'chips small' }, hidden.map((b) => h('button', {
+      class: 'chip', title: 'Wiederherstellen',
+      onClick: async () => {
+        await store.unhideBuiltins([b.id]);
+        toast(`„${b.name}“ wiederhergestellt`);
+        render();
+      },
+    }, h('span', { class: 'ico' }, b.icon), b.name, ' ↺'))),
+    h('p', { class: 'hint' }, 'Antippen, um einen Grundsound zurückzuholen.'));
+}
+
+// Nach Änderungen an der Audioquelle laufende Wiedergaben neu aufbauen
+function soundChanged(id) {
+  state.previews.get(id)?.stop(0.2);
+  state.previews.delete(id);
+  engine.forget(id);
+  player.refresh();
+}
+
+async function deleteSound(s) {
+  const what = s.builtin ? 'Grundsound' : 'Sound';
+  if (!confirm(`${what} „${s.name}“ löschen? Er wird auch aus allen Szenen entfernt.${s.builtin ? ' Gelöschte Grundsounds lassen sich in der Bibliothek wiederherstellen.' : ''}`)) return;
+  await store.deleteSound(s.id);
+  soundChanged(s.id);
+  render();
+}
+
+const SOUND_ICONS = ['🐺', '😱', '😈', '🤭', '🪶', '👻', '👹', '🚪', '✊', '🗡️', '💥', '⚡', '✨', '💓', '🔔', '🐉', '🦇', '🕷️', '💀', '🔥', '🌧️', '🌊', '🌲', '🍺', '⛓️', '🕯️', '⚔️', '🏹', '🐎', '👣', '🗝️', '📜', '🎻', '🥁', '🎺', '🪦'];
+
+function openSoundEditor(sound) {
+  const dlg = h('dialog', { class: 'modal' });
+  const draft = { name: sound.name, icon: sound.icon };
+  const close = () => {
+    dlg.close();
+    dlg.remove();
+    render();
+  };
+  const save = async () => {
+    const patch = { name: draft.name.trim() || sound.name, icon: draft.icon.trim() || sound.icon };
+    if (patch.name !== sound.name || patch.icon !== sound.icon) await store.updateSound(sound.id, patch);
+    close();
+  };
+  const fileInput = h('input', {
+    type: 'file', class: 'hidden',
+    onChange: async (e) => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      try {
+        toast(`Importiere „${f.name}“ …`);
+        await store.replaceAudio(sound.id, f);
+        soundChanged(sound.id);
+        toast('Audio ersetzt – alle Szenen nutzen jetzt die neue Datei.');
+        await save();
+      } catch (err) {
+        showError(err);
+      }
+    },
+  });
+  const current = () => store.sound(sound.id) || sound;
+  const body = () => h('div', { class: 'modal-body' },
+    h('div', { class: 'modal-head' }, h('h2', {}, 'Sound bearbeiten'), h('div', { class: 'grow' }), h('button', { class: 'btn primary', onClick: save }, 'Fertig')),
+    h('label', { class: 'field' }, 'Name',
+      h('input', { class: 'input', value: draft.name, onInput: (e) => (draft.name = e.target.value) })),
+    h('div', { class: 'field' }, 'Symbol',
+      h('div', { class: 'icon-pick' },
+        h('input', { class: 'input icon-input', value: draft.icon, maxlength: 4, onInput: (e) => (draft.icon = e.target.value) }),
+        SOUND_ICONS.map((i) => h('button', { class: `icon-opt ${draft.icon === i ? 'on' : ''}`, onClick: () => { draft.icon = i; refresh(); } }, i)))),
+    h('div', { class: 'field' }, 'Audio',
+      h('p', { class: 'hint' }, soundOrigin(current()), '. Beim Ersetzen bleiben alle Szenen, die diesen Sound nutzen, unverändert verknüpft.'),
+      h('div', { class: 'btn-row' },
+        h('label', { class: 'btn' }, fileInput, '⇪ Durch Datei ersetzen'),
+        sound.builtin && current().modified ? h('button', {
+          class: 'btn',
+          onClick: async () => {
+            if (!confirm('Name, Symbol und Klang auf den ursprünglichen Grundsound zurücksetzen?')) return;
+            await store.restoreBuiltin(sound.id);
+            soundChanged(sound.id);
+            toast('Original wiederhergestellt');
+            close();
+          },
+        }, '↺ Original wiederherstellen') : null)),
+    h('div', { class: 'modal-foot' },
+      h('div', { class: 'grow' }),
+      h('button', {
+        class: 'btn danger',
+        onClick: async () => {
+          close();
+          await deleteSound(sound);
+        },
+      }, '🗑 Löschen')));
+  const refresh = () => dlg.replaceChildren(body());
+  refresh();
+  dlg.addEventListener('cancel', (e) => { e.preventDefault(); save(); });
+  document.body.append(dlg);
+  dlg.showModal();
 }
 
 // ---------------------------------------------------------------------------
@@ -718,8 +809,8 @@ function renderSettings() {
     h('div', { class: 'card' },
       h('h2', {}, 'Als App installieren'),
       h('p', {}, isStandalone()
-        ? '✅ Klangkulisse läuft als installierte App.'
-        : 'Öffne diese Seite in Safari, tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm“. Danach startet Klangkulisse im Vollbild wie eine normale App – auch offline.')));
+        ? '✅ Das Cerebros Soundboard läuft als installierte App.'
+        : 'Öffne diese Seite in Safari, tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm“. Danach startet das Cerebros Soundboard im Vollbild wie eine normale App – auch offline.')));
 }
 
 function renderSpotifySettings() {
@@ -810,10 +901,10 @@ async function copy(text) {
 async function exportBackup() {
   toast('Sicherung wird erstellt …');
   const json = await store.exportBackup();
-  const name = `klangkulisse-${new Date().toISOString().slice(0, 10)}.json`;
+  const name = `cerebros-soundboard-${new Date().toISOString().slice(0, 10)}.json`;
   const file = new File([json], name, { type: 'application/json' });
   if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: 'Klangkulisse-Sicherung' }).catch(() => {});
+    await navigator.share({ files: [file], title: 'Cerebros-Soundboard-Sicherung' }).catch(() => {});
     return;
   }
   const a = h('a', { href: URL.createObjectURL(file), download: name });
