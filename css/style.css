@@ -282,6 +282,10 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
   display: flex; flex-direction: column; gap: 14px;
 }
 .settings .lbl { width: 140px; }
+.lib-scope-row { display: flex; align-items: center; gap: 12px; }
+.lib-scope-row .lbl { font: 600 12px var(--display); letter-spacing: 2px; text-transform: uppercase; width: auto; }
+.lib-scope { font-size: 18px; }
+.empty-lib { margin: 6px 2px; color: var(--muted); font-style: italic; }
 .lib-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .lib-list { display: flex; flex-direction: column; gap: 6px; }
 .lib-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
@@ -302,7 +306,7 @@ details[open] { display: flex; flex-direction: column; gap: 8px; }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .modal-head { display: flex; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
 .modal-head h2 { margin: 0; font: 600 20px var(--display); letter-spacing: 2px; }
-.modal-foot { display: flex; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.modal-foot { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
 .field { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font: 600 12px var(--display); letter-spacing: 2px; text-transform: uppercase; }
 .field .input { color: var(--text); text-transform: none; letter-spacing: 0; }
 .field .hint { font: italic 16px var(--serif); text-transform: none; letter-spacing: 0; }

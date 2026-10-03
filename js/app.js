@@ -13,6 +13,7 @@ const state = {
   view: 'play',
   sceneId: null,
   libCat: 'oneshot',
+  libScope: null, // null = Mutterbibliothek, sonst Szenen-ID
   boardFilter: 'scene',
   previews: new Map(),
   playlists: null,
@@ -294,7 +295,7 @@ function renderSourceSelect(scene, mode) {
       render();
     },
   },
-  h('optgroup', { label: 'Bibliothek' }, store.soundsIn(mode).map((s) => h('option', { value: `lib:${s.id}` }, `${s.icon} ${s.name}`))),
+  h('optgroup', { label: 'Bibliothek' }, withCurrent(store.soundsIn(mode, scene.id), slot.soundId).map((s) => h('option', { value: `lib:${s.id}` }, `${s.icon} ${s.name}`))),
   h('optgroup', { label: 'Spotify' }, spotifyOpts));
   sel.value = value;
   return sel;
@@ -347,7 +348,7 @@ function soundLabel(s) {
 
 function renderLayersCard(scene) {
   const used = new Set(scene.layers.map((l) => l.soundId));
-  const opts = (cat) => store.soundsIn(cat).filter((s) => !used.has(s.id)).map((s) => h('option', { value: s.id }, `${s.icon} ${s.name}`));
+  const opts = (cat) => store.soundsIn(cat, scene.id).filter((s) => !used.has(s.id)).map((s) => h('option', { value: s.id }, `${s.icon} ${s.name}`));
   return h('div', { class: 'card' },
     h('h2', {}, 'Hintergrundgeräusche'),
     scene.layers.length ? null : h('p', { class: 'hint' }, 'Noch keine Hintergrundgeräusche – füge unten welche hinzu.'),
@@ -396,7 +397,7 @@ function renderWeatherCard(scene) {
           changed(scene);
         },
       }, h('span', { class: 'ico' }, '☀️'), 'Kein'),
-      store.soundsIn('weather').map((s) => h('button', {
+      store.soundsIn('weather', scene.id).map((s) => h('button', {
         class: `chip ${active.has(s.id) ? 'on' : ''}`, 'aria-pressed': active.has(s.id) ? 'true' : 'false',
         onClick: () => {
           scene.weather = active.has(s.id)
@@ -424,7 +425,7 @@ function renderRandomCard(scene) {
   const r = scene.random;
   return h('div', { class: 'card' },
     h('h2', {}, 'Nebengeräusche ', h('small', {}, 'erklingen zufällig aus der Ferne')),
-    h('div', { class: 'chips small' }, store.soundsIn('oneshot').map((s) => h('button', {
+    h('div', { class: 'chips small' }, store.soundsIn('oneshot', scene.id).map((s) => h('button', {
       class: `chip ${r.soundIds.includes(s.id) ? 'on' : ''}`,
       onClick: () => {
         r.soundIds = r.soundIds.includes(s.id) ? r.soundIds.filter((x) => x !== s.id) : [...r.soundIds, s.id];
@@ -447,7 +448,7 @@ function renderRandomCard(scene) {
 }
 
 function renderBoard(scene) {
-  const all = store.soundsIn('oneshot');
+  const all = store.soundsIn('oneshot', scene?.id);
   const favs = scene ? scene.favorites.map((id) => store.sound(id)).filter(Boolean) : [];
   const list = state.boardFilter === 'scene' && favs.length ? favs : all;
   const fileInput = h('input', {
@@ -492,7 +493,8 @@ async function playPad(sound, el) {
   }
 }
 
-async function importFiles(files, category, scene) {
+// Neue Dateien landen in libId (null = Mutterbibliothek); ohne Angabe in der Bibliothek der Szene
+async function importFiles(files, category, scene, libId = scene?.id ?? null) {
   if (!files?.length) return;
   const list = [...files];
   let n = 0;
@@ -500,7 +502,7 @@ async function importFiles(files, category, scene) {
   for (const f of list) {
     toast(`Importiere „${f.name}“ …`);
     try {
-      const s = await store.importFile(f, category);
+      const s = await store.importFile(f, category, libId);
       if (scene && category === 'oneshot') scene.favorites.push(s.id);
       n++;
     } catch (e) {
@@ -540,7 +542,7 @@ function openSceneEditor(scene) {
         onClick: () => { scene.color = c; refresh(); },
       })))),
     h('div', { class: 'field' }, 'Einzelgeräusche dieser Szene (Soundboard „Szene“)',
-      h('div', { class: 'chips small' }, store.soundsIn('oneshot').map((s) => h('button', {
+      h('div', { class: 'chips small' }, store.soundsIn('oneshot', scene.id).map((s) => h('button', {
         class: `chip ${scene.favorites.includes(s.id) ? 'on' : ''}`,
         onClick: () => {
           scene.favorites = scene.favorites.includes(s.id) ? scene.favorites.filter((x) => x !== s.id) : [...scene.favorites, s.id];
@@ -549,6 +551,16 @@ function openSceneEditor(scene) {
       }, h('span', { class: 'ico' }, s.icon), s.name)))),
     h('p', { class: 'hint' }, 'Musik, Hintergrund, Wetter und Nebengeräusche stellst du direkt im Szenen-Bereich ein – alles wird automatisch gespeichert.'),
     h('div', { class: 'modal-foot' },
+      h('button', {
+        class: 'btn ghost',
+        onClick: () => {
+          close();
+          stopPreviews();
+          state.view = 'library';
+          state.libScope = scene.id;
+          render();
+        },
+      }, '📚 Bibliothek der Szene'),
       h('button', {
         class: 'btn ghost',
         onClick: async () => {
@@ -567,9 +579,11 @@ function openSceneEditor(scene) {
         onClick: async () => {
           if (!confirm(`Szene „${scene.name}“ wirklich löschen?`)) return;
           if (player.sceneId === scene.id) player.stop();
-          await store.deleteScene(scene.id);
+          const moved = await store.deleteScene(scene.id);
+          if (state.libScope === scene.id) state.libScope = null;
           state.sceneId = null;
           close();
+          if (moved) toast(`${moved} Sound${moved === 1 ? '' : 's'} aus der Szenenbibliothek in die Mutterbibliothek verschoben.`);
         },
       }, '🗑 Löschen')));
   const refresh = () => dlg.replaceChildren(body());
@@ -590,13 +604,33 @@ function stopPreviews() {
 
 function renderLibrary() {
   const cat = state.libCat;
-  const sounds = store.soundsIn(cat);
+  if (state.libScope && !store.scene(state.libScope)) state.libScope = null;
+  const scope = state.libScope;
+  const sounds = store.librarySounds(cat, scope);
   const loop = CATEGORIES[cat].loop;
   const fileInput = h('input', {
     type: 'file', multiple: true, class: 'hidden',
-    onChange: (e) => { importFiles(e.target.files, cat); e.target.value = ''; },
+    onChange: (e) => { importFiles(e.target.files, cat, null, scope); e.target.value = ''; },
   });
+  const scopeSel = h('select', {
+    class: 'select lib-scope', 'aria-label': 'Bibliothek wählen',
+    onChange: (e) => {
+      stopPreviews();
+      state.libScope = e.target.value || null;
+      render();
+    },
+  },
+  h('option', { value: '' }, `📚 Mutterbibliothek – für alle Szenen (${store.sounds.filter((x) => !store.libraryOf(x)).length})`),
+  h('optgroup', { label: 'Bibliothek einer Szene' }, store.scenes.map((sc) => h('option', { value: sc.id },
+    `${sc.icon} ${sc.name} (${store.sounds.filter((x) => store.libraryOf(x) === sc.id).length})`))));
+  scopeSel.value = scope || '';
+  const scopeName = scope ? `der Bibliothek von „${store.scene(scope).name}“` : 'der Mutterbibliothek';
   return h('div', { class: 'library', 'data-scroll': 'library' },
+    h('div', { class: 'lib-scope-row' }, h('span', { class: 'lbl' }, 'Bibliothek'), scopeSel),
+    h('p', { class: 'hint' }, scope
+      ? 'Sounds dieser Bibliothek erscheinen nur in dieser Szene. Die Mutterbibliothek steht zusätzlich in jeder Szene zur Verfügung.'
+      : 'Die Mutterbibliothek steht in jeder Szene zur Verfügung. Sounds, die nur eine Szene braucht, legst du besser in deren eigene Bibliothek.'),
+    scope ? null : renderAutoAssign(),
     seg(Object.entries(CATEGORIES).map(([id, c]) => ({ id, label: c.label, icon: c.icon })), cat, (id) => {
       stopPreviews();
       state.libCat = id;
@@ -604,12 +638,15 @@ function renderLibrary() {
     }, 'wide tabs'),
     h('div', { class: 'lib-toolbar' },
       h('label', { class: 'btn primary' }, fileInput, '＋ Audiodateien importieren'),
-      h('span', { class: 'hint' }, loop ? 'Wird nahtlos in Schleife abgespielt.' : 'Wird einmal abgespielt.')),
+      h('span', { class: 'hint' }, `Landet in ${scopeName}. `, loop ? 'Wird nahtlos in Schleife abgespielt.' : 'Wird einmal abgespielt.')),
+    sounds.length ? null : h('p', { class: 'empty-lib' }, scope
+      ? `Noch keine ${CATEGORIES[cat].label} in dieser Szenenbibliothek. Importiere Dateien oder verschiebe Sounds aus der Mutterbibliothek (✎ → Bibliothek).`
+      : `Keine ${CATEGORIES[cat].label} in der Mutterbibliothek.`),
     h('div', { class: 'lib-list' }, sounds.map((s) => {
       const previewing = state.previews.has(s.id);
       return h('div', { class: 'lib-row' },
         h('span', { class: 'lib-icon' }, s.icon),
-        h('div', { class: 'lib-name' }, s.name, h('small', {}, soundOrigin(s))),
+        h('div', { class: 'lib-name' }, s.name, h('small', {}, soundOrigin(s), usageText(s))),
         h('button', {
           class: `btn icon ${previewing ? 'danger' : ''}`, title: 'Vorhören',
           onClick: async () => {
@@ -635,7 +672,7 @@ function renderLibrary() {
         h('button', { class: 'btn icon ghost', title: 'Bearbeiten', onClick: () => openSoundEditor(s) }, '✎'),
         h('button', { class: 'btn icon ghost', title: 'Löschen', onClick: () => deleteSound(s) }, '🗑'));
     })),
-    renderHiddenBuiltins(cat),
+    scope ? null : renderHiddenBuiltins(cat),
     h('div', { class: 'card tip' },
       h('h2', {}, 'Wo bekomme ich passende Sounds?'),
       h('p', {}, 'Kostenlose Geräusche und Musik findest du z. B. bei ',
@@ -650,6 +687,35 @@ function soundOrigin(s) {
   if (!s.builtin) return 'Eigene Datei';
   if (s.fileId) return 'Grundsound · durch eigene Datei ersetzt';
   return s.modified ? 'Grundsound (synthetisch) · bearbeitet' : 'Grundsound (synthetisch)';
+}
+
+function usageText(s) {
+  const scenes = store.usage(s.id);
+  return scenes.length ? ` · genutzt in: ${scenes.map((sc) => sc.name).join(', ')}` : '';
+}
+
+// Aktuell gewählten Sound in einer Liste behalten, auch wenn er aus einer anderen Bibliothek stammt
+function withCurrent(list, id) {
+  const cur = id && store.sound(id);
+  return cur && !list.includes(cur) ? [cur, ...list] : list;
+}
+
+function renderAutoAssign() {
+  const list = store.autoAssignCandidates();
+  if (!list.length) return null;
+  return h('div', { class: 'card' },
+    h('h2', {}, 'Aufräumen'),
+    h('p', { class: 'hint' }, list.length === 1
+      ? '1 eigener Sound wird nur von einer einzigen Szene genutzt und kann in deren Bibliothek verschoben werden.'
+      : `${list.length} eigene Sounds werden jeweils nur von einer einzigen Szene genutzt und können in deren Bibliothek verschoben werden.`),
+    h('div', { class: 'btn-row' }, h('button', {
+      class: 'btn',
+      onClick: async () => {
+        const n = await store.autoAssign();
+        toast(`${n} Sound${n === 1 ? '' : 's'} in die Szenenbibliotheken verschoben.`);
+        render();
+      },
+    }, '⇄ Automatisch zuordnen')));
 }
 
 function renderHiddenBuiltins(cat) {
@@ -688,15 +754,15 @@ const SOUND_ICONS = ['🐺', '😱', '😈', '🤭', '🪶', '👻', '👹', '�
 
 function openSoundEditor(sound) {
   const dlg = h('dialog', { class: 'modal' });
-  const draft = { name: sound.name, icon: sound.icon };
+  const draft = { name: sound.name, icon: sound.icon, sceneId: store.libraryOf(sound) };
   const close = () => {
     dlg.close();
     dlg.remove();
     render();
   };
   const save = async () => {
-    const patch = { name: draft.name.trim() || sound.name, icon: draft.icon.trim() || sound.icon };
-    if (patch.name !== sound.name || patch.icon !== sound.icon) await store.updateSound(sound.id, patch);
+    const patch = { name: draft.name.trim() || sound.name, icon: draft.icon.trim() || sound.icon, sceneId: draft.sceneId };
+    if (patch.name !== sound.name || patch.icon !== sound.icon || patch.sceneId !== store.libraryOf(sound)) await store.updateSound(sound.id, patch);
     close();
   };
   const fileInput = h('input', {
@@ -725,6 +791,14 @@ function openSoundEditor(sound) {
       h('div', { class: 'icon-pick' },
         h('input', { class: 'input icon-input', value: draft.icon, maxlength: 4, onInput: (e) => (draft.icon = e.target.value) }),
         SOUND_ICONS.map((i) => h('button', { class: `icon-opt ${draft.icon === i ? 'on' : ''}`, onClick: () => { draft.icon = i; refresh(); } }, i)))),
+    h('label', { class: 'field' }, 'Bibliothek',
+      (() => {
+        const sel = h('select', { class: 'select', onChange: (e) => (draft.sceneId = e.target.value || null) },
+          h('option', { value: '' }, '📚 Mutterbibliothek – für alle Szenen'),
+          h('optgroup', { label: 'Nur in einer Szene' }, store.scenes.map((sc) => h('option', { value: sc.id }, `${sc.icon} ${sc.name}`))));
+        sel.value = draft.sceneId || '';
+        return sel;
+      })()),
     h('div', { class: 'field' }, 'Audio',
       h('p', { class: 'hint' }, soundOrigin(current()), '. Beim Ersetzen bleiben alle Szenen, die diesen Sound nutzen, unverändert verknüpft.'),
       h('div', { class: 'btn-row' },

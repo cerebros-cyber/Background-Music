@@ -213,17 +213,51 @@ export class Store {
     return this.sounds.find((s) => s.id === id);
   }
 
-  soundsIn(category) {
+  // Bibliothek eines Sounds: Szenen-ID oder null (= Mutterbibliothek, für alle Szenen).
+  // Sounds einer gelöschten Szene gelten als Mutterbibliothek.
+  libraryOf(sound) {
+    return sound.sceneId && this.scene(sound.sceneId) ? sound.sceneId : null;
+  }
+
+  // Sounds einer Kategorie. Mit sceneId: Mutterbibliothek + Bibliothek dieser Szene.
+  soundsIn(category, sceneId) {
+    return sortByName(this.sounds.filter((s) => s.category === category
+      && (sceneId === undefined || [null, sceneId].includes(this.libraryOf(s)))));
+  }
+
+  // Nur die Sounds genau einer Bibliothek (null = Mutterbibliothek)
+  librarySounds(category, libId) {
+    return sortByName(this.sounds.filter((s) => s.category === category && this.libraryOf(s) === libId));
+  }
+
+  // Szenen, die einen Sound verwenden
+  usage(id) {
+    return this.scenes.filter((sc) => sc.layers.some((l) => l.soundId === id)
+      || sc.weather.some((l) => l.soundId === id)
+      || sc.random.soundIds.includes(id)
+      || sc.favorites.includes(id)
+      || ['creepy', 'action'].some((m) => sc.music[m]?.soundId === id));
+  }
+
+  // Sounds der Mutterbibliothek, die nur eine einzige Szene nutzt
+  autoAssignCandidates() {
     return this.sounds
-      .filter((s) => s.category === category)
-      .sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base', numeric: true }));
+      .filter((s) => this.libraryOf(s) === null && !s.builtin)
+      .map((s) => ({ sound: s, scenes: this.usage(s.id) }))
+      .filter((x) => x.scenes.length === 1);
+  }
+
+  async autoAssign() {
+    const list = this.autoAssignCandidates();
+    for (const { sound, scenes } of list) await this.updateSound(sound.id, { sceneId: scenes[0].id });
+    return list.length;
   }
 
   scene(id) {
     return this.scenes.find((s) => s.id === id);
   }
 
-  async importFile(file, category) {
+  async importFile(file, category, sceneId = null) {
     const fileId = uid();
     const { data, type, name } = await prepareImport(file);
     await db.put('files', fileId, { name, type, data });
@@ -234,6 +268,7 @@ export class Store {
       name: file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'Eigener Sound',
       icon: CATEGORIES[category].icon,
       builtin: false,
+      sceneId,
     };
     this.userSounds.push(sound);
     await this.persist('sounds');
@@ -312,9 +347,13 @@ export class Store {
     return sc;
   }
 
+  // Sounds aus der Bibliothek der Szene wandern in die Mutterbibliothek – es geht nichts verloren
   async deleteScene(id) {
+    const owned = this.sounds.filter((s) => s.sceneId === id);
+    for (const s of owned) await this.updateSound(s.id, { sceneId: null });
     this.scenes = this.scenes.filter((s) => s.id !== id);
     await this.persist('scenes');
+    return owned.length;
   }
 
   async resetScenes() {
@@ -348,6 +387,10 @@ export class Store {
     this.settings = { ...structuredClone(DEFAULT_SETTINGS), ...(data.settings || {}) };
     await Promise.all([this.persist('scenes'), this.persist('sounds'), this.persist('builtins'), this.persist('settings')]);
   }
+}
+
+function sortByName(list) {
+  return list.sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base', numeric: true }));
 }
 
 function bufToBase64(buf) {
