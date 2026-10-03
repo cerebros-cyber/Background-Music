@@ -214,7 +214,9 @@ export class Store {
   }
 
   soundsIn(category) {
-    return this.sounds.filter((s) => s.category === category);
+    return this.sounds
+      .filter((s) => s.category === category)
+      .sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base', numeric: true }));
   }
 
   scene(id) {

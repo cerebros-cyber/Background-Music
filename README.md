@@ -10,7 +10,7 @@ sind nicht nötig.
 
 ## Funktionen
 
-- **Szenen** (z. B. Taverne, Nächtlicher Wald, Verfluchte Krypta, Kampf …): Antippen startet die Szene, beim Szenenwechsel wird weich übergeblendet.
+- **Szenen** (z. B. Taverne, Nächtlicher Wald, Verfluchte Krypta, Kampf …): Antippen wählt die Szene aus und stoppt eine laufende Szene; gestartet wird mit „Starten“, damit du in Ruhe vorbereiten kannst.
 - **Pro Szene einstellbar:**
   - **Musik:** *Keine*, *Unheimlich* oder *Action*. Für jede Musikart lässt sich die Quelle wählen: eingebaute Musik, eigene Audiodatei oder eine **Spotify**-Playlist.
   - **Hintergrundgeräusche** (Taverne, Lagerfeuer, Bach, Meer, Höhle, Verlies, Nacht- und Tagwald …) – beliebig viele gleichzeitig, jede mit eigener Intensität.

@@ -157,8 +157,9 @@ function renderPlay() {
         class: `scene-card ${s.id === scene?.id ? 'selected' : ''} ${player.sceneId === s.id ? 'playing' : ''}`,
         style: `--c:${s.color}`,
         onClick: () => {
+          // Nur auswählen; eine andere laufende Szene wird gestoppt, gestartet wird per „Starten“
           state.sceneId = s.id;
-          player.start(s).catch(showError);
+          if (player.playing && player.sceneId !== s.id) player.stop();
           render();
         },
       }, h('span', { class: 'scene-icon' }, s.icon), h('span', { class: 'scene-name' }, s.name),
