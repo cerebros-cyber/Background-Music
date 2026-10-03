@@ -577,13 +577,16 @@ function openSceneEditor(scene) {
       h('button', {
         class: 'btn danger',
         onClick: async () => {
-          if (!confirm(`Szene „${scene.name}“ wirklich löschen?`)) return;
+          const n = store.sceneLibrary(scene.id).length;
+          const lib = n ? `\n\nDie Bibliothek der Szene mit ${n} Sound${n === 1 ? '' : 's'} wird ebenfalls gelöscht.` : '';
+          if (!confirm(`Szene „${scene.name}“ wirklich löschen?${lib}`)) return;
           if (player.sceneId === scene.id) player.stop();
-          const moved = await store.deleteScene(scene.id);
+          const removed = await store.deleteScene(scene.id);
+          removed.forEach((s) => engine.forget(s.id));
           if (state.libScope === scene.id) state.libScope = null;
           state.sceneId = null;
           close();
-          if (moved) toast(`${moved} Sound${moved === 1 ? '' : 's'} aus der Szenenbibliothek in die Mutterbibliothek verschoben.`);
+          if (removed.length) toast(`Szene und ${removed.length} Sound${removed.length === 1 ? '' : 's'} ihrer Bibliothek gelöscht.`);
         },
       }, '🗑 Löschen')));
   const refresh = () => dlg.replaceChildren(body());

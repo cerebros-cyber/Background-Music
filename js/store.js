@@ -347,13 +347,18 @@ export class Store {
     return sc;
   }
 
-  // Sounds aus der Bibliothek der Szene wandern in die Mutterbibliothek – es geht nichts verloren
+  // Sounds in der Bibliothek einer Szene
+  sceneLibrary(id) {
+    return this.sounds.filter((s) => s.sceneId === id);
+  }
+
+  // Die Bibliothek der Szene wird mitgelöscht (Grundsounds darin werden wie beim Löschen ausgeblendet)
   async deleteScene(id) {
-    const owned = this.sounds.filter((s) => s.sceneId === id);
-    for (const s of owned) await this.updateSound(s.id, { sceneId: null });
+    const owned = this.sceneLibrary(id);
+    for (const s of owned) await this.deleteSound(s.id);
     this.scenes = this.scenes.filter((s) => s.id !== id);
     await this.persist('scenes');
-    return owned.length;
+    return owned;
   }
 
   async resetScenes() {

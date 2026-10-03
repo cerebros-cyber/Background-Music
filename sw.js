@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei Änderungen an den Dateien VERSION erhöhen, damit Geräte die neue Fassung laden.
-const VERSION = 'cerebros-v14';
+const VERSION = 'cerebros-v15';
 const FILES = [
   './',
   'index.html',
