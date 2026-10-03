@@ -80,7 +80,9 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
 /* --- Topbar --------------------------------------------------------------- */
 
 .topbar {
-  position: sticky; top: 0; z-index: 10;
+  /* fest verankert (fixed): iPadOS erkennt so die Kopfzeile, verlängert ihre Farbe unter die Statusleiste
+     und legt keinen weichgezeichneten Scroll-Rand über den oberen Bereich */
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
   display: flex; align-items: center; gap: 14px;
   height: calc(var(--top) + var(--safe-t));
   padding: var(--safe-t) calc(16px + var(--safe-r)) 0 calc(16px + var(--safe-l));
@@ -182,6 +184,8 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
 
 /* --- Layout --------------------------------------------------------------- */
 
+/* Platz für die feste Kopfzeile (Padding statt Margin, damit die Seite nicht übersteht und scrollt) */
+#app { padding-top: calc(var(--top) + var(--safe-t)); }
 .view-play {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr) 320px;
