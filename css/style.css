@@ -36,7 +36,7 @@
    der nach unten ausläuft. Den kann eine Web-App nicht abschalten – daher bleibt oben ein einfarbiger
    Streifen frei, in dem der Schleier unsichtbar ist; Logo und Menü liegen darunter im scharfen Bereich. */
 @media (display-mode: standalone) {
-  :root { --safe-t: calc(max(env(safe-area-inset-top, 0px), 24px) + 26px); }
+  :root { --safe-t: calc(max(env(safe-area-inset-top, 0px), 24px) + 14px); }
 }
 
 * { box-sizing: border-box; }
