@@ -32,10 +32,11 @@
   color-scheme: dark;
 }
 
-/* Als installierte App: Statusleiste ist massiv schwarz (status-bar-style „black“), die Seite beginnt
-   darunter – so legt iPadOS keinen weichgezeichneten Verlauf über den oberen Rand. Etwas Luft zur Leiste. */
+/* Als installierte App legt iPadOS 26 hinter Uhrzeit und App-Namen einen weichgezeichneten Schleier,
+   der nach unten ausläuft. Den kann eine Web-App nicht abschalten – daher bleibt oben ein einfarbiger
+   Streifen frei, in dem der Schleier unsichtbar ist; Logo und Menü liegen darunter im scharfen Bereich. */
 @media (display-mode: standalone) {
-  :root { --safe-t: calc(env(safe-area-inset-top, 0px) + 6px); }
+  :root { --safe-t: calc(max(env(safe-area-inset-top, 0px), 24px) + 26px); }
 }
 
 * { box-sizing: border-box; }
