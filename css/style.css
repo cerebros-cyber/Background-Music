@@ -84,15 +84,14 @@ a { color: var(--ember); text-decoration-color: rgba(211, 148, 69, .4); text-und
   display: flex; align-items: center; gap: 14px;
   height: calc(var(--top) + var(--safe-t));
   padding: var(--safe-t) calc(16px + var(--safe-r)) 0 calc(16px + var(--safe-l));
-  background: linear-gradient(rgba(8, 10, 12, .96), rgba(10, 12, 15, .88));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* massiv statt durchscheinend/weichgezeichnet – sonst wirkt der obere Rand unter der Statusleiste verwischt */
+  background: linear-gradient(#08090b, #0d1013);
   border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .6), 0 8px 24px rgba(0, 0, 0, .45);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .6);
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.logo { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 0 8px rgba(211, 148, 69, .25)) drop-shadow(0 2px 4px rgba(0, 0, 0, .8)); }
-.brand-name { display: flex; flex-direction: column; line-height: 1; font: 700 20px/1 var(--display); letter-spacing: 3px; text-transform: uppercase; color: #ecdcb8; text-shadow: 0 0 18px rgba(211, 148, 69, .3); }
+.logo { width: 46px; height: 46px; flex: none; }
+.brand-name { display: flex; flex-direction: column; line-height: 1; font: 700 20px/1 var(--display); letter-spacing: 3px; text-transform: uppercase; color: #ecdcb8; }
 .brand-name small { font: 500 10px/1.4 var(--display); letter-spacing: 5.2px; color: var(--ember); margin-top: 3px; }
 .master { display: flex; align-items: center; gap: 10px; margin-left: auto; width: 230px; color: var(--muted); }
 .master svg { width: 20px; height: 20px; flex: none; }

@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei Änderungen an den Dateien VERSION erhöhen, damit Geräte die neue Fassung laden.
-const VERSION = 'cerebros-v7';
+const VERSION = 'cerebros-v8';
 const FILES = [
   './',
   'index.html',
@@ -46,7 +46,9 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: beim Server nachfragen (ETag), damit Updates sofort ankommen statt erst nach Ablauf des HTTP-Caches.
+    // Navigationsanfragen lassen sich nicht mit Optionen kopieren, daher über die URL.
+    fetch(e.request.mode === 'navigate' ? new Request(e.request.url, { cache: 'no-cache' }) : new Request(e.request, { cache: 'no-cache' }))
       .then((res) => {
         if (res.ok && !url.search) {
           const copy = res.clone();
