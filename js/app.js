@@ -20,7 +20,15 @@ const state = {
 };
 
 const ICONS = ['🎭', '🍺', '🌲', '💀', '⚔️', '🌊', '🔥', '🏰', '🌙', '🕸️', '🐉', '⛪', '🏚️', '🗻', '🏜️', '❄️', '🌋', '🧙', '👑', '⚓', '🕯️', '🩸', '🌌', '🐺'];
-const COLORS = ['#7c5cff', '#c84444', '#d08a3c', '#2f8f6a', '#3c7fd0', '#8fbf3c', '#e0662c', '#b0479b', '#6b7280', '#c9a227'];
+const COLORS = ['#d39445', '#a33a34', '#7f9a5a', '#4f7a8a', '#6f8496', '#8a6a9e', '#b5652c', '#c9b48a', '#5d636c', '#3f6b52'];
+
+const SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg>';
+
+function svg(markup) {
+  const t = document.createElement('template');
+  t.innerHTML = markup;
+  return t.content.firstChild;
+}
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen
@@ -63,9 +71,9 @@ function seg(options, current, onpick, cls = '') {
 let toastTimer;
 function toast(msg, kind = 'info', action = null) {
   const el = document.getElementById('toast');
-  el.replaceChildren(h('span', {}, msg),
+  el.replaceChildren(...[h('span', {}, msg),
     action ? h('a', { class: 'btn small toast-action', href: action.href, target: '_blank', rel: 'noopener' }, action.label) : null,
-    h('button', { class: 'toast-close', 'aria-label': 'Schließen', onClick: () => (el.className = 'toast') }, '✕'));
+    h('button', { class: 'toast-close', 'aria-label': 'Schließen', onClick: () => (el.className = 'toast') }, '✕')].filter(Boolean));
   el.className = `toast show ${kind}`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (el.className = 'toast'), kind === 'error' ? (action ? 15000 : 8000) : 3000);
@@ -103,19 +111,19 @@ function render() {
 
 function renderTopbar() {
   const nav = [
-    { id: 'play', label: 'Spielen', icon: '🎲' },
-    { id: 'library', label: 'Bibliothek', icon: '📚' },
-    { id: 'settings', label: 'Einstellungen', icon: '⚙️' },
+    { id: 'play', label: 'Spielen' },
+    { id: 'library', label: 'Bibliothek' },
+    { id: 'settings', label: 'Einstellungen' },
   ];
   return h('header', { class: 'topbar' },
-    h('div', { class: 'brand' }, h('span', { class: 'logo' }, '🐉'), h('span', { class: 'brand-name' }, 'Klangkulisse')),
+    h('div', { class: 'brand' }, h('img', { class: 'logo', src: 'icons/logo.svg', alt: '' }), h('span', { class: 'brand-name' }, 'Klangkulisse')),
     seg(nav, state.view, (id) => {
       stopPreviews();
       state.view = id;
       render();
     }, 'nav'),
     h('div', { class: 'master' },
-      h('span', { 'aria-hidden': 'true' }, '🔊'),
+      svg(SPEAKER),
       slider({
         value: store.settings.volumes.master, label: 'Gesamtlautstärke',
         oninput: (v) => {
@@ -418,8 +426,8 @@ function renderBoard(scene) {
   const favs = scene ? scene.favorites.map((id) => store.sound(id)).filter(Boolean) : [];
   const list = state.boardFilter === 'scene' && favs.length ? favs : all;
   const fileInput = h('input', {
-    type: 'file', accept: 'audio/*', multiple: true, class: 'hidden',
-    onChange: (e) => importFiles(e.target.files, 'oneshot', scene),
+    type: 'file', multiple: true, class: 'hidden',
+    onChange: (e) => { importFiles(e.target.files, 'oneshot', scene); e.target.value = ''; },
   });
   return h('section', { class: 'board' },
     h('div', { class: 'board-head' },
@@ -431,7 +439,7 @@ function renderBoard(scene) {
       render();
     }, 'wide small'),
     h('div', { class: 'row compact' },
-      h('span', { class: 'tiny' }, '🔉'),
+      h('span', { class: 'tiny', style: 'display:flex;width:18px' }, svg(SPEAKER)),
       slider({
         value: store.settings.volumes.sfx, label: 'Lautstärke Einzelgeräusche',
         oninput: (v) => {
@@ -461,19 +469,24 @@ async function playPad(sound, el) {
 
 async function importFiles(files, category, scene) {
   if (!files?.length) return;
+  const list = [...files];
   let n = 0;
-  for (const f of files) {
+  let failed = null;
+  for (const f of list) {
+    toast(`Importiere „${f.name}“ …`);
     try {
       const s = await store.importFile(f, category);
       if (scene && category === 'oneshot') scene.favorites.push(s.id);
       n++;
     } catch (e) {
-      showError(e);
+      console.error(e);
+      failed = e;
     }
   }
   if (scene) store.save('scenes', 0);
-  toast(`${n} ${n === 1 ? 'Datei' : 'Dateien'} importiert`);
   render();
+  if (failed) showError(failed);
+  else toast(`${n} ${n === 1 ? 'Datei' : 'Dateien'} importiert`);
 }
 
 // ---------------------------------------------------------------------------
@@ -555,8 +568,8 @@ function renderLibrary() {
   const sounds = store.soundsIn(cat);
   const loop = CATEGORIES[cat].loop;
   const fileInput = h('input', {
-    type: 'file', accept: 'audio/*', multiple: true, class: 'hidden',
-    onChange: (e) => importFiles(e.target.files, cat),
+    type: 'file', multiple: true, class: 'hidden',
+    onChange: (e) => { importFiles(e.target.files, cat); e.target.value = ''; },
   });
   return h('div', { class: 'library', 'data-scroll': 'library' },
     seg(Object.entries(CATEGORIES).map(([id, c]) => ({ id, label: c.label, icon: c.icon })), cat, (id) => {
@@ -623,7 +636,7 @@ function renderLibrary() {
         h('a', { href: 'https://freesound.org', target: '_blank', rel: 'noopener' }, 'freesound.org'), ', ',
         h('a', { href: 'https://tabletopaudio.com', target: '_blank', rel: 'noopener' }, 'tabletopaudio.com'), ' oder ',
         h('a', { href: 'https://pixabay.com/sound-effects/', target: '_blank', rel: 'noopener' }, 'pixabay.com'),
-        '. Lade die Datei in die Dateien-App deines iPads und importiere sie hier. Unterstützt werden u. a. MP3, M4A, WAV und AAC. Achte auf die jeweilige Lizenz.'),
+        '. Lade die Datei in die Dateien-App deines iPads und importiere sie hier. Unterstützt werden u. a. MP3, M4A, AAC, WAV, OGG und OPUS (OGG wird beim Import einmalig umgewandelt). Achte auf die jeweilige Lizenz.'),
       h('p', {}, 'Tipp: Für Hintergrund- und Musikschleifen eignen sich Dateien von 1–5 Minuten am besten; sehr lange Dateien brauchen viel Arbeitsspeicher.')));
 }
 

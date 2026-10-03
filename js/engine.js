@@ -1,6 +1,7 @@
 // Audio-Engine: Mischpult, Kanäle, Ebenen mit Überblendung, Einzelgeräusche.
 import { Loop, LOOP_GENERATORS, ONESHOT_GENERATORS, impulseResponse, rand } from './synth.js';
 import { db } from './db.js';
+import { decodeAudio } from './decode.js';
 
 const BUSES = ['music', 'ambience', 'weather', 'sfx'];
 const MAX_CACHE_SAMPLES = 50_000_000; // ≈ 200 MB dekodiertes Audio
@@ -85,8 +86,7 @@ export class AudioEngine {
     const p = (async () => {
       const rec = await db.get('files', sound.fileId);
       if (!rec) throw new Error(`Audiodatei für „${sound.name}“ fehlt.`);
-      const data = rec.data.slice(0);
-      const buf = await this.ctx.decodeAudioData(data);
+      const buf = await decodeAudio(this.ctx, rec.data);
       this.cache.set(key, buf);
       this.trimCache();
       return buf;

@@ -16,7 +16,7 @@ sind nicht nötig.
   - **Wetter:** Regen, Wind, Gewitter, Schneesturm – mit Stärke-Regler.
   - **Nebengeräusche:** ausgewählte Einzelgeräusche erklingen zufällig „aus der Ferne“ (z. B. Wolfsgeheul im Nachtwald), Häufigkeit einstellbar.
 - **Soundboard für Einzelgeräusche:** Schrei, Böses Lachen, Kichern, Wolfsgeheul, Rabe, Geisterstöhnen, Knurren, Knarrende Tür, Klopfen, Schwertklirren, Explosion, Donner, Zauber, Herzschlag, Glockenschlag. Pro Szene lassen sich Favoriten festlegen.
-- **Erweiterbar:** neue Szenen anlegen, duplizieren, löschen; eigene Audiodateien (MP3, M4A, WAV, AAC …) in jede Kategorie importieren – als Musik, Hintergrund, Wetter oder Einzelgeräusch.
+- **Erweiterbar:** neue Szenen anlegen, duplizieren, löschen; eigene Audiodateien (MP3, M4A, AAC, WAV, OGG, OPUS, FLAC …) in jede Kategorie importieren. OGG/OPUS-Dateien, die das iPad nicht selbst abspielen kann, werden beim Import einmalig in WAV umgewandelt (dadurch größer im Speicher) – als Musik, Hintergrund, Wetter oder Einzelgeräusch.
 - **Mischpult:** getrennte Lautstärken für Musik, Hintergrund, Wetter und Einzelgeräusche; „Alles stoppen“-Knopf.
 - **Datensicherung:** Szenen und eigene Sounds als Datei exportieren und auf einem anderen Gerät wieder einlesen.
 
@@ -69,6 +69,10 @@ installierten App unter „Verbindungscode einfügen“ eintragen.
 Wird kein Gerät gefunden, die Spotify-App kurz öffnen und einen Titel anspielen – iOS beendet Spotify
 nach einer Weile im Hintergrund.
 
+## Design
+
+Das Erscheinungsbild orientiert sich an der Logtown-Kampagne: Schiefer und Nebel, eiserne Linien, knochenfarbene Schrift und das Glutlicht der Fenster an der Steilküste als einziger warmer Akzent. Überschriften in Cinzel, Text in EB Garamond; Symbole sind entsättigt und glimmen nur, wenn etwas aktiv ist. Schriften und Bilder liegen lokal bei, damit die App offline funktioniert.
+
 ## Aufbau
 
 | Datei | Inhalt |
@@ -81,6 +85,9 @@ nach einer Weile im Hintergrund.
 | `js/store.js` | Datenmodell, Beispielszenen, Sicherung |
 | `js/spotify.js` | Spotify-Anmeldung (PKCE) und Fernsteuerung |
 | `js/db.js` | Speicherung in IndexedDB |
+| `js/decode.js` | Prüft importierte Dateien, wandelt OGG/OPUS bei Bedarf um |
+| `js/vendor/` | OGG-Decoder ([wasm-audio-decoders](https://github.com/eshaz/wasm-audio-decoders), MIT) |
+| `fonts/`, `img/` | Schriften Cinzel und EB Garamond (SIL Open Font License), Hintergrundbild der Logtown-Kampagne |
 | `sw.js` | Service Worker für den Offline-Betrieb |
 
 Neue eingebaute Klänge lassen sich ergänzen, indem man in `js/synth.js` einen Generator schreibt

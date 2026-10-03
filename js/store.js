@@ -1,5 +1,6 @@
 // Datenmodell: Klangbibliothek, Szenen, Einstellungen – dauerhaft in IndexedDB.
 import { db } from './db.js';
+import { prepareImport } from './decode.js';
 
 export const CATEGORIES = {
   creepy: { label: 'Unheimliche Musik', short: 'Unheimlich', icon: '🕯️', loop: true },
@@ -45,6 +46,9 @@ export const BUILTIN_SOUNDS = [
   b('bell', 'oneshot', 'Glockenschlag', '🔔'),
 ];
 
+// Farben früherer Versionen auf die gedeckte Logtown-Palette abbilden
+const OLD_COLORS = { '#7c5cff': '#8a6a9e', '#d08a3c': '#d39445', '#2f8f6a': '#3f6b52', '#c84444': '#a33a34', '#3c7fd0': '#4f7a8a', '#8fbf3c': '#7f9a5a', '#e0662c': '#b5652c', '#b0479b': '#8a6a9e', '#6b7280': '#5d636c', '#c9a227': '#c9b48a' };
+
 export const uid = () =>
   crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -62,7 +66,7 @@ export function newScene(name = 'Neue Szene') {
     id: uid(),
     name,
     icon: '🎭',
-    color: '#7c5cff',
+    color: '#8a6a9e',
     intensity: 'normal',
     music: { mode: 'none', volume: 0.8, creepy: lib('syn:creepy'), action: lib('syn:action') },
     layers: [],
@@ -81,43 +85,43 @@ function scene(name, icon, color, patch) {
 
 export function defaultScenes() {
   return [
-    scene('Taverne', '🍺', '#d08a3c', {
+    scene('Taverne', '🍺', '#d39445', {
       layers: [layer('syn:tavern', 0.6), layer('syn:fire', 0.3)],
       weather: { soundId: 'syn:rain', level: 0.25 },
       favorites: ['syn:laugh', 'syn:giggle', 'syn:sword', 'syn:knock', 'syn:creak'],
     }),
-    scene('Nächtlicher Wald', '🌲', '#2f8f6a', {
+    scene('Nächtlicher Wald', '🌲', '#3f6b52', {
       music: { mode: 'creepy' },
       layers: [layer('syn:nightforest', 0.6)],
       weather: { soundId: 'syn:wind', level: 0.3 },
       random: { soundIds: ['syn:wolf', 'syn:raven'], frequency: 0.25 },
       favorites: ['syn:wolf', 'syn:raven', 'syn:scream', 'syn:growl', 'syn:giggle'],
     }),
-    scene('Verfluchte Krypta', '💀', '#7c5cff', {
+    scene('Verfluchte Krypta', '💀', '#8a6a9e', {
       music: { mode: 'creepy', creepy: lib('syn:creepybox') },
       layers: [layer('syn:cave', 0.6), layer('syn:dungeon', 0.4)],
       random: { soundIds: ['syn:ghost', 'syn:creak', 'syn:knock'], frequency: 0.3 },
       favorites: ['syn:scream', 'syn:giggle', 'syn:ghost', 'syn:laugh', 'syn:heartbeat', 'syn:bell'],
     }),
-    scene('Kampf', '⚔️', '#c84444', {
+    scene('Kampf', '⚔️', '#a33a34', {
       intensity: 'intense',
       music: { mode: 'action' },
       layers: [layer('syn:fire', 0.2)],
       weather: { soundId: 'syn:wind', level: 0.3 },
       favorites: ['syn:sword', 'syn:explosion', 'syn:growl', 'syn:scream', 'syn:magic', 'syn:thunder'],
     }),
-    scene('Sturm auf See', '🌊', '#3c7fd0', {
+    scene('Sturm auf See', '🌊', '#4f7a8a', {
       layers: [layer('syn:ocean', 0.8)],
       weather: { soundId: 'syn:storm', level: 0.7 },
       favorites: ['syn:thunder', 'syn:scream', 'syn:bell'],
     }),
-    scene('Friedliche Reise', '🌄', '#8fbf3c', {
+    scene('Friedliche Reise', '🌄', '#7f9a5a', {
       intensity: 'calm',
       layers: [layer('syn:dayforest', 0.6), layer('syn:stream', 0.4)],
       weather: { soundId: 'syn:wind', level: 0.15 },
       favorites: ['syn:raven', 'syn:wolf', 'syn:magic'],
     }),
-    scene('Lagerfeuer bei Nacht', '🔥', '#e0662c', {
+    scene('Lagerfeuer bei Nacht', '🔥', '#b5652c', {
       layers: [layer('syn:fire', 0.7), layer('syn:nightforest', 0.4)],
       random: { soundIds: ['syn:wolf'], frequency: 0.15 },
       favorites: ['syn:wolf', 'syn:growl', 'syn:raven', 'syn:laugh'],
@@ -148,6 +152,14 @@ export class Store {
       db.get('meta', 'settings'),
     ]);
     this.scenes = scenes || defaultScenes();
+    let migrated = false;
+    for (const sc of this.scenes) {
+      if (OLD_COLORS[sc.color]) {
+        sc.color = OLD_COLORS[sc.color];
+        migrated = true;
+      }
+    }
+    if (migrated) this.persist('scenes');
     this.userSounds = sounds || [];
     this.settings = { ...structuredClone(DEFAULT_SETTINGS), ...(settings || {}) };
     this.settings.volumes = { ...DEFAULT_SETTINGS.volumes, ...this.settings.volumes };
@@ -184,8 +196,8 @@ export class Store {
 
   async importFile(file, category) {
     const fileId = uid();
-    const data = await file.arrayBuffer();
-    await db.put('files', fileId, { name: file.name, type: file.type, data });
+    const { data, type, name } = await prepareImport(file);
+    await db.put('files', fileId, { name, type, data });
     const sound = {
       id: `usr:${fileId}`,
       fileId,

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Klippe -->
+  <path d="M14 58 L20 40 L24 42 L27 34 L37 34 L40 42 L45 39 L50 58 Z" fill="#2a2f37" stroke="#4a515c" stroke-width="1"/>
+  <!-- Turm -->
+  <path d="M28 34 V18 L32 8 L36 18 V34 Z" fill="#1a1e24" stroke="#5a616c" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M26.5 19 H37.5" stroke="#5a616c" stroke-width="1.2"/>
+  <!-- Glutfenster -->
+  <rect x="30.6" y="23" width="2.8" height="4.2" rx="1.4" fill="#e3a24f"/>
+  <rect x="30.6" y="23" width="2.8" height="4.2" rx="1.4" fill="#ffcf86" opacity=".6" filter="url(#g)"/>
+  <!-- Schallwellen -->
+  <g stroke="#d39445" stroke-width="2.2" stroke-linecap="round">
+    <path d="M19 20 q-5 7 0 14"/>
+    <path d="M13 16 q-8 11 0 22" opacity=".55"/>
+    <path d="M45 20 q5 7 0 14"/>
+    <path d="M51 16 q8 11 0 22" opacity=".55"/>
+  </g>
+  <defs><filter id="g" x="-2" y="-2" width="5" height="5"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+</svg>

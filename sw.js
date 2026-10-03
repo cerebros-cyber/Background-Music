@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei Änderungen an den Dateien VERSION erhöhen, damit Geräte die neue Fassung laden.
-const VERSION = 'klangkulisse-v2';
+const VERSION = 'klangkulisse-v3';
 const FILES = [
   './',
   'index.html',
@@ -13,6 +13,14 @@ const FILES = [
   'js/spotify.js',
   'js/store.js',
   'js/synth.js',
+  'js/decode.js',
+  'js/vendor/ogg-vorbis-decoder.min.js',
+  'js/vendor/ogg-opus-decoder.min.js',
+  'fonts/Cinzel-normal.woff2',
+  'fonts/EBGaramond-normal.woff2',
+  'fonts/EBGaramond-italic.woff2',
+  'img/backdrop.jpg',
+  'icons/logo.svg',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
