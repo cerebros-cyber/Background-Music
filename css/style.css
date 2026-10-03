@@ -32,6 +32,12 @@
   color-scheme: dark;
 }
 
+/* Als installierte App liegt die Statusleiste über der Seite: oben immer genug Platz lassen,
+   auch wenn das iPad keinen Sicherheitsabstand meldet, plus etwas Luft darunter */
+@media (display-mode: standalone) {
+  :root { --safe-t: calc(max(env(safe-area-inset-top, 0px), 24px) + 8px); }
+}
+
 * { box-sizing: border-box; }
 
 html, body {
