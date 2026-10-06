@@ -62,13 +62,21 @@ const lib = (soundId) => ({ kind: 'lib', soundId });
 const layer = (soundId, level) => ({ id: uid(), soundId, level });
 
 // Frühere Versionen kannten nur ein Wetter pro Szene: { soundId, level }
+// Häufigkeit eines Nebengeräuschs (0 = selten … 1 = häufig); früher gab es nur einen Wert pro Szene
+export const freqOf = (random, id) => random.freqs?.[id] ?? random.frequency ?? 0.3;
+
 export function normalizeScene(sc) {
+  let changed = false;
   if (!Array.isArray(sc.weather)) {
     const w = sc.weather || {};
     sc.weather = w.soundId ? [{ id: uid(), soundId: w.soundId, level: w.level ?? 0.5 }] : [];
-    return true;
+    changed = true;
   }
-  return false;
+  if (!sc.random.freqs) {
+    sc.random.freqs = Object.fromEntries(sc.random.soundIds.map((id) => [id, sc.random.frequency ?? 0.3]));
+    changed = true;
+  }
+  return changed;
 }
 
 export function newScene(name = 'Neue Szene') {
@@ -81,7 +89,7 @@ export function newScene(name = 'Neue Szene') {
     music: { mode: 'none', volume: 0.8, creepy: lib('syn:creepy'), action: lib('syn:action') },
     layers: [],
     weather: [],
-    random: { soundIds: [], frequency: 0.3 },
+    random: { soundIds: [], freqs: {} },
     favorites: [],
   };
 }
@@ -104,13 +112,13 @@ export function defaultScenes() {
       music: { mode: 'creepy' },
       layers: [layer('syn:nightforest', 0.6)],
       weather: [layer('syn:wind', 0.3)],
-      random: { soundIds: ['syn:wolf', 'syn:raven'], frequency: 0.25 },
+      random: { soundIds: ['syn:wolf', 'syn:raven'], freqs: { 'syn:wolf': 0.25, 'syn:raven': 0.25 } },
       favorites: ['syn:wolf', 'syn:raven', 'syn:scream', 'syn:growl', 'syn:giggle'],
     }),
     scene('Verfluchte Krypta', '💀', '#8a6a9e', {
       music: { mode: 'creepy', creepy: lib('syn:creepybox') },
       layers: [layer('syn:cave', 0.6), layer('syn:dungeon', 0.4)],
-      random: { soundIds: ['syn:ghost', 'syn:creak', 'syn:knock'], frequency: 0.3 },
+      random: { soundIds: ['syn:ghost', 'syn:creak', 'syn:knock'], freqs: { 'syn:ghost': 0.3, 'syn:creak': 0.3, 'syn:knock': 0.3 } },
       favorites: ['syn:scream', 'syn:giggle', 'syn:ghost', 'syn:laugh', 'syn:heartbeat', 'syn:bell'],
     }),
     scene('Kampf', '⚔️', '#a33a34', {
@@ -133,7 +141,7 @@ export function defaultScenes() {
     }),
     scene('Lagerfeuer bei Nacht', '🔥', '#b5652c', {
       layers: [layer('syn:fire', 0.7), layer('syn:nightforest', 0.4)],
-      random: { soundIds: ['syn:wolf'], frequency: 0.15 },
+      random: { soundIds: ['syn:wolf'], freqs: { 'syn:wolf': 0.15 } },
       favorites: ['syn:wolf', 'syn:growl', 'syn:raven', 'syn:laugh'],
     }),
   ];
@@ -330,6 +338,7 @@ export class Store {
       sc.layers = sc.layers.filter((l) => l.soundId !== id);
       sc.weather = sc.weather.filter((l) => l.soundId !== id);
       sc.random.soundIds = sc.random.soundIds.filter((x) => x !== id);
+      if (sc.random.freqs) delete sc.random.freqs[id];
       sc.favorites = sc.favorites.filter((x) => x !== id);
       for (const slot of ['creepy', 'action']) {
         if (sc.music[slot]?.soundId === id) {

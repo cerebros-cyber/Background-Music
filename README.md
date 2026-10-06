@@ -16,7 +16,7 @@ sind nicht nötig.
   - **Hintergrundgeräusche** (Taverne, Lagerfeuer, Bach, Meer, Höhle, Verlies, Nacht- und Tagwald …) – beliebig viele gleichzeitig, jede mit eigener Intensität.
   - **Intensität** der ganzen Szene: *Ruhig*, *Normal*, *Intensiv* (beeinflusst Dichte und Lautstärke aller Geräusche und die Energie der Musik).
   - **Wetter:** Regen, Wind, Gewitter, Schneesturm – beliebig kombinierbar, jedes mit eigenem Stärke-Regler.
-  - **Nebengeräusche:** ausgewählte Einzelgeräusche erklingen zufällig „aus der Ferne“ (z. B. Wolfsgeheul im Nachtwald), Häufigkeit einstellbar.
+  - **Nebengeräusche:** ausgewählte Einzelgeräusche erklingen zufällig „aus der Ferne“ (z. B. Wolfsgeheul im Nachtwald), jedes mit eigenem Regler für die Häufigkeit.
 - **Soundboard für Einzelgeräusche:** Schrei, Böses Lachen, Kichern, Wolfsgeheul, Rabe, Geisterstöhnen, Knurren, Knarrende Tür, Klopfen, Schwertklirren, Explosion, Donner, Zauber, Herzschlag, Glockenschlag. Pro Szene lassen sich Favoriten festlegen.
 - **Mehrere Bibliotheken:** Eine **Mutterbibliothek** (mit den Grundsounds) steht jeder Szene zur Verfügung; zusätzlich hat jede Szene ihre **eigene Bibliothek**, deren Sounds nur in dieser Szene erscheinen. Sounds lassen sich über „Bearbeiten“ verschieben; „Automatisch zuordnen“ verschiebt Sounds, die nur eine Szene nutzt, in deren Bibliothek. Beim Löschen einer Szene wird ihre Bibliothek mitgelöscht.
 - **Bibliothek frei bearbeitbar:** Alle Sounds – auch die eingebauten Grundsounds – lassen sich umbenennen, mit einem anderen Symbol versehen, durch eine eigene Audiodatei ersetzen (Szenen bleiben verknüpft) oder löschen. Gelöschte oder veränderte Grundsounds lassen sich jederzeit wiederherstellen.

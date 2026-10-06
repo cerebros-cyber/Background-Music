@@ -1,6 +1,6 @@
 // Szenen-Player: gleicht laufende Klänge mit dem Zustand der aktiven Szene ab.
-import { INTENSITY_LEVELS } from './store.js';
-import { rand, pick } from './synth.js';
+import { INTENSITY_LEVELS, freqOf } from './store.js';
+import { rand } from './synth.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
@@ -14,7 +14,7 @@ export class ScenePlayer extends EventTarget {
     this.music = null; // { key, handle?, spotify? }
     this.layers = new Map(); // layerId -> { soundId, handle }
     this.weather = new Map(); // weatherId -> { soundId, handle }
-    this.randomTimer = null;
+    this.randomTimers = new Map(); // soundId -> Timer, jedes Nebengeräusch hat seinen eigenen Takt
     this.wakeLock = null;
   }
 
@@ -66,8 +66,8 @@ export class ScenePlayer extends EventTarget {
     this.layers.clear();
     for (const w of this.weather.values()) w.handle.stop(fade);
     this.weather.clear();
-    clearTimeout(this.randomTimer);
-    this.randomTimer = null;
+    for (const t of this.randomTimers.values()) clearTimeout(t);
+    this.randomTimers.clear();
   }
 
   // Wird nach jeder Änderung an der aktiven Szene aufgerufen
@@ -81,7 +81,7 @@ export class ScenePlayer extends EventTarget {
 
     this.syncMusic(scene, lvl);
 
-    if (!this.randomTimer) this.scheduleRandom(true);
+    this.syncRandom(scene);
   }
 
   // Laufende Ebenen (Hintergrund oder Wetter) mit der Liste der Szene abgleichen
@@ -143,34 +143,42 @@ export class ScenePlayer extends EventTarget {
     this.music = null;
   }
 
-  // Nebengeräusche in zufälligen Abständen
-  scheduleRandom(first = false) {
-    clearTimeout(this.randomTimer);
-    const scene = this.store.scene(this.sceneId);
-    if (!scene) return;
-    const freq = clamp01(scene.random.frequency * this.intensityOf(scene).factor);
-    const base = 90 - 80 * freq; // 90 s (selten) … 10 s (häufig)
-    const delay = (first ? rand(0.2, 0.6) : rand(0.6, 1.4)) * base;
-    this.randomTimer = setTimeout(() => {
-      const sc = this.store.scene(this.sceneId);
-      const ids = sc?.random.soundIds.filter((id) => this.store.sound(id)) || [];
-      if (ids.length && this.engine.running) {
-        this.engine
-          .playOneShot(this.store.sound(pick(ids)), {
-            bus: 'ambience',
-            volume: rand(0.35, 0.75),
-            pan: rand(-0.85, 0.85),
-            distance: rand(0.2, 0.8),
-          })
-          .catch((e) => this.error(e));
+  // Nebengeräusche: Für jedes gewählte Geräusch läuft ein eigener Zeitgeber
+  syncRandom(scene) {
+    const ids = new Set(scene.random.soundIds);
+    for (const [id, t] of this.randomTimers) {
+      if (!ids.has(id)) {
+        clearTimeout(t);
+        this.randomTimers.delete(id);
       }
-      this.scheduleRandom();
-    }, delay * 1000);
+    }
+    for (const id of ids) if (!this.randomTimers.has(id)) this.scheduleRandom(id, true);
   }
 
-  // Nach Änderung der Häufigkeit neu planen
-  rescheduleRandom() {
-    if (this.playing) this.scheduleRandom(true);
+  scheduleRandom(id, first = false) {
+    clearTimeout(this.randomTimers.get(id));
+    const scene = this.store.scene(this.sceneId);
+    if (!scene || !scene.random.soundIds.includes(id)) {
+      this.randomTimers.delete(id);
+      return;
+    }
+    const freq = clamp01(freqOf(scene.random, id) * this.intensityOf(scene).factor);
+    const base = 120 - 110 * freq; // 120 s (selten) … 10 s (häufig)
+    const delay = (first ? rand(0.2, 0.7) : rand(0.6, 1.4)) * base;
+    this.randomTimers.set(id, setTimeout(() => {
+      const sound = this.store.sound(id);
+      if (sound && this.engine.running) {
+        this.engine
+          .playOneShot(sound, { bus: 'ambience', volume: rand(0.35, 0.75), pan: rand(-0.85, 0.85), distance: rand(0.2, 0.8) })
+          .catch((e) => this.error(e));
+      }
+      this.scheduleRandom(id);
+    }, delay * 1000));
+  }
+
+  // Nach Änderung einer Häufigkeit neu planen
+  rescheduleRandom(id) {
+    if (this.playing && this.randomTimers.has(id)) this.scheduleRandom(id, true);
   }
 
   async keepAwake() {

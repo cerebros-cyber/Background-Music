@@ -1,6 +1,6 @@
 // Oberfläche des Cerebros Soundboards
 import { AudioEngine } from './engine.js';
-import { Store, CATEGORIES, INTENSITY_LEVELS, newScene, uid } from './store.js';
+import { Store, CATEGORIES, INTENSITY_LEVELS, newScene, uid, freqOf } from './store.js';
 import { Spotify, parseSpotifyLink, isSpotifyOwnedPlaylist } from './spotify.js';
 import { ScenePlayer } from './player.js';
 
@@ -423,29 +423,40 @@ function renderWeatherCard(scene) {
 
 function renderRandomCard(scene) {
   const r = scene.random;
+  r.freqs ||= {};
   return h('div', { class: 'card' },
-    h('h2', {}, 'Nebengeräusche ', h('small', {}, 'erklingen zufällig aus der Ferne')),
+    h('h2', {}, 'Nebengeräusche ', h('small', {}, 'erklingen zufällig aus der Ferne – jedes mit eigener Häufigkeit')),
     h('div', { class: 'chips small' }, store.soundsIn('oneshot', scene.id).map((s) => h('button', {
       class: `chip ${r.soundIds.includes(s.id) ? 'on' : ''}`,
       onClick: () => {
-        r.soundIds = r.soundIds.includes(s.id) ? r.soundIds.filter((x) => x !== s.id) : [...r.soundIds, s.id];
+        if (r.soundIds.includes(s.id)) {
+          r.soundIds = r.soundIds.filter((x) => x !== s.id);
+          delete r.freqs[s.id];
+        } else {
+          r.soundIds = [...r.soundIds, s.id];
+          r.freqs[s.id] = 0.3;
+        }
         changed(scene);
       },
     }, h('span', { class: 'ico' }, s.icon), s.name))),
-    r.soundIds.length ? h('div', { class: 'row' },
-      h('label', { class: 'lbl' }, 'Häufigkeit'),
-      h('span', { class: 'tiny' }, 'selten'),
-      slider({
-        value: r.frequency, label: 'Häufigkeit',
-        oninput: (v) => {
-          r.frequency = v;
-          store.save('scenes');
-          clearTimeout(renderRandomCard.t);
-          renderRandomCard.t = setTimeout(() => player.rescheduleRandom(), 500);
-        },
-      }),
-      h('span', { class: 'tiny' }, 'häufig')) : null);
+    r.soundIds.length ? h('div', { class: 'freq-head' }, h('span', {}, 'selten'), h('span', {}, 'häufig')) : null,
+    r.soundIds.map((id) => {
+      const s = store.sound(id);
+      if (!s) return null;
+      return h('div', { class: 'layer' },
+        h('div', { class: 'layer-name' }, soundLabel(s)),
+        slider({
+          value: freqOf(r, id), label: `Häufigkeit ${s.name}`,
+          oninput: (v) => {
+            r.freqs[id] = v;
+            store.save('scenes');
+            clearTimeout(renderRandomCard.t[id]);
+            renderRandomCard.t[id] = setTimeout(() => player.rescheduleRandom(id), 500);
+          },
+        }));
+    }));
 }
+renderRandomCard.t = {};
 
 function renderBoard(scene) {
   const all = store.soundsIn('oneshot', scene?.id);
