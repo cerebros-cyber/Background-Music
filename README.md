@@ -36,6 +36,7 @@ oder [pixabay.com](https://pixabay.com/sound-effects/) (Lizenzen beachten).
 3. Das Cerebros Soundboard über das neue Symbol starten.
 
 Tipps für den Spieleabend:
+- **Im Hintergrund weiterspielen** (Einstellungen, experimentell): Die Klänge laufen weiter, wenn du die App verlässt oder das iPad sperrst; Stopp/Start über Sperrbildschirm und Kontrollzentrum. In diesem Modus kann nicht mit Spotify gemischt werden. Ist er aus, stoppt iPadOS die Wiedergabe im Hintergrund.
 - Das iPad nicht in den Ruhezustand gehen lassen – die App hält den Bildschirm während der Wiedergabe wach (Einstellung).
 - Ist „Mit anderen Apps mischen“ aktiv (nötig für Spotify), beachtet das iPad den Stumm-Schalter.
 - Für Bluetooth-Lautsprecher einfach das iPad wie gewohnt verbinden.

@@ -788,12 +788,14 @@ function actionGen(L, { chase = false } = {}) {
     const bpm = (chase ? 150 : 124) + 30 * I;
     const stepDur = 60 / bpm / 4;
     if (next < ctx.currentTime) next = ctx.currentTime + 0.05;
-    while (next < ctx.currentTime + 0.15) {
+    // Im Hintergrund drosselt der Browser Timer stark – dann weiter vorausplanen
+    const ahead = document.hidden ? 2.5 : 0.15;
+    while (next < ctx.currentTime + ahead) {
       playStep(next, step, I, stepDur);
       next += stepDur;
       step++;
     }
-    return 0.025;
+    return document.hidden ? 0.5 : 0.025;
   });
 }
 

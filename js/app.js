@@ -873,6 +873,14 @@ function renderSettings() {
         }), h('span', { class: 'tiny', id: 'xf' }, `${st.crossfade} s`)),
       toggle('mixWithOthers', 'Mit anderen Apps mischen (nötig, damit Spotify parallel laufen kann)', (v) => engine.setMixWithOthers(v)),
       h('p', { class: 'hint' }, 'Hinweis: Beim Mischen beachtet das iPad den Stummschalter bzw. „Stumm“ im Kontrollzentrum.'),
+      toggle('backgroundPlay', 'Im Hintergrund weiterspielen (experimentell)', (v) => {
+        engine.ensure();
+        engine.setBackground(v);
+        render();
+      }),
+      st.backgroundPlay
+        ? h('p', { class: 'hint' }, 'Die Klänge laufen weiter, wenn du die App verlässt oder das iPad sperrst. Steuerung über Sperrbildschirm/Kontrollzentrum. Dafür kann nicht mit anderen Apps gemischt werden: Spotify pausiert, sobald die App Ton ausgibt.')
+        : h('p', { class: 'hint' }, 'Aus: Die Wiedergabe stoppt, wenn die App in den Hintergrund geht – dafür kann Spotify parallel laufen.'),
       toggle('keepAwake', 'Bildschirm während der Wiedergabe wach halten')),
     renderSpotifySettings(),
     h('div', { class: 'card' },
@@ -1022,6 +1030,16 @@ async function main() {
   await store.load();
   engine.setVolumes(store.settings.volumes);
   engine.setMixWithOthers(store.settings.mixWithOthers);
+  engine.setBackground(store.settings.backgroundPlay);
+  // Sperrbildschirm/Kontrollzentrum: Pause stoppt die Szene, Wiedergabe startet die gewählte Szene
+  try {
+    navigator.mediaSession?.setActionHandler('pause', () => { player.stop(); render(); });
+    navigator.mediaSession?.setActionHandler('stop', () => { player.stop(); render(); });
+    navigator.mediaSession?.setActionHandler('play', () => {
+      const sc = currentScene();
+      if (sc) player.start(sc).then(render).catch(showError);
+    });
+  } catch { /* nicht unterstützt */ }
   state.sceneId = store.scenes[0]?.id || null;
 
   // Audio auf iOS bei der ersten Berührung freischalten

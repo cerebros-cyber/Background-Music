@@ -39,6 +39,7 @@ export class ScenePlayer extends EventTarget {
     }
     this.sync(scene);
     this.keepAwake();
+    this.engine.setMediaInfo(scene.name);
     this.emit();
   }
 
@@ -47,6 +48,7 @@ export class ScenePlayer extends EventTarget {
     this.stopMusic(Math.min(1.5, this.fade));
     this.sceneId = null;
     this.releaseWake();
+    this.engine.setMediaInfo(null);
     this.emit();
   }
 

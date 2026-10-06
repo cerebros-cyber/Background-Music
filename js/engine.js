@@ -28,7 +28,8 @@ export class AudioEngine {
       comp.ratio.value = 4;
       comp.attack.value = 0.01;
       comp.release.value = 0.25;
-      this.master.connect(comp).connect(ctx.destination);
+      this.master.connect(comp);
+      this.out = comp;
       for (const b of BUSES) {
         this.buses[b] = ctx.createGain();
         this.buses[b].connect(this.master);
@@ -39,12 +40,55 @@ export class AudioEngine {
       rg.gain.value = 0.55;
       this.reverb.connect(rg).connect(this.master);
       this.applyVolumes();
+      this.route();
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') this.resume();
       });
     }
     this.resume();
+    // iOS startet ein Audio-Element nur aus einer Nutzeraktion heraus – daher bei jeder Gelegenheit anstoßen
+    if (this.bgEl?.paused && this.background) this.bgEl.play().catch(() => {});
     return this.ctx;
+  }
+
+  // Hintergrund-Wiedergabe: Der Ton läuft dann über ein <audio>-Element (Medienwiedergabe), das iPadOS
+  // im Hintergrund weiterlaufen lässt. Sonst direkt über die Web-Audio-Ausgabe.
+  setBackground(on) {
+    this.background = !!on;
+    this.applySession();
+    this.route();
+  }
+
+  route() {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const useEl = this.background && !!ctx.createMediaStreamDestination;
+    this.out.disconnect();
+    if (useEl) {
+      if (!this.streamDest) {
+        this.streamDest = ctx.createMediaStreamDestination();
+        this.bgEl = document.createElement('audio');
+        this.bgEl.setAttribute('playsinline', '');
+        this.bgEl.srcObject = this.streamDest.stream;
+      }
+      this.out.connect(this.streamDest);
+      this.bgEl.play().catch(() => {});
+    } else {
+      this.out.connect(ctx.destination);
+      this.bgEl?.pause();
+    }
+  }
+
+  // Titel und Steuerung auf dem Sperrbildschirm / im Kontrollzentrum
+  setMediaInfo(title) {
+    const ms = navigator.mediaSession;
+    if (!ms) return;
+    try {
+      ms.metadata = title && window.MediaMetadata
+        ? new MediaMetadata({ title, artist: 'Cerebros Soundboard', artwork: [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] })
+        : null;
+      ms.playbackState = title ? 'playing' : 'none';
+    } catch { /* nicht unterstützt */ }
   }
 
   resume() {
@@ -68,9 +112,15 @@ export class AudioEngine {
   }
 
   // Erlaubt Mischen mit anderen Apps (z. B. Spotify) – Safari ab iOS 17.
+  // „ambient“ wird im Hintergrund beendet; für Hintergrund-Wiedergabe ist „playback“ nötig.
   setMixWithOthers(mix) {
+    this.mix = mix;
+    this.applySession();
+  }
+
+  applySession() {
     try {
-      if (navigator.audioSession) navigator.audioSession.type = mix ? 'ambient' : 'playback';
+      if (navigator.audioSession) navigator.audioSession.type = this.mix && !this.background ? 'ambient' : 'playback';
     } catch { /* nicht unterstützt */ }
   }
 

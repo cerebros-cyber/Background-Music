@@ -144,6 +144,7 @@ export const DEFAULT_SETTINGS = {
   crossfade: 3,
   mixWithOthers: true,
   keepAwake: true,
+  backgroundPlay: false,
   spotifyClientId: '',
 };
 
