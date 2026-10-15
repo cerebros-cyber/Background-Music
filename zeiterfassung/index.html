@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Zeiterfassung für Lehrkräfte</title>
+<title>NGG Zeiterfassung</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Arbeitszeit für Lehrkräfte auf dem Handy erfassen – mit Timer, Stundenplan, Ferien und Auswertung.">
-<meta name="theme-color" content="#1d6b52">
+<meta name="theme-color" content="#dc3545">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,48 +16,56 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Semi+Condensed:wght@500;600;700;800&display=swap">
 <style>
-/* Layout: eine Spalte wie ein Klassenbuch-Tag, Navigation unten in Daumenreichweite, Timer als Hauptobjekt. */
+/* Layout: eine Spalte, NGG-Farben (Rot #DC3545, Dunkel #1D1D1B, Grautöne), Navigation unten in Daumenreichweite, Timer als Hauptobjekt. */
 :root {
-  --bg: #eef2ef;
+  --bg: #f3f3f1;
   --surface: #ffffff;
-  --surface-2: #e3eae5;
-  --line: #d3ddd6;
-  --fg: #13201a;
-  --fg-2: #46564d;
-  --fg-3: #6f7f76;
-  --accent: #1d6b52;          /* Tafelgrün */
-  --accent-strong: #145440;
+  --surface-2: #e9e9e6;
+  --line: #dadad6;
+  --fg: #1d1d1b;              /* NGG Dunkel */
+  --fg-2: #5a5a5a;            /* NGG Grau dunkel */
+  --fg-3: #77777a;
+  --accent: #dc3545;          /* NGG Rot */
+  --accent-strong: #b02a37;
   --accent-fg: #ffffff;
-  --accent-soft: #d6ebe1;
-  --chalk: #f5f7f2;           /* Kreide auf der Tafel */
+  --accent-soft: #fbe2e4;
+  --ink: #1d1d1b;             /* laufender Timer */
+  --ink-fg: #ffffff;
+  --ink-line: #3d3d3a;
+  --ok: #1f7a4d;
+  --ok-soft: #dcefe4;
   --danger: #b3261e;
   --danger-soft: #f8dedb;
   --warn: #8a5a00;
   --warn-soft: #fbedc9;
-  --shadow: 0 1px 2px rgba(19, 32, 26, .06), 0 8px 24px rgba(19, 32, 26, .08);
-  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --shadow: 0 1px 2px rgba(29, 29, 27, .06), 0 8px 24px rgba(29, 29, 27, .08);
+  --f-display: "Barlow Semi Condensed", "Avenir Next Condensed", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --r: 14px;
-  --r-s: 10px;
+  --r: 12px;
+  --r-s: 8px;
   --nav-h: 64px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d1411; --surface: #152019; --surface-2: #1d2a23; --line: #2a3a32;
-    --fg: #e4ede7; --fg-2: #a7b7ad; --fg-3: #7d8d84;
-    --accent: #5bbd96; --accent-strong: #7fd0ae; --accent-fg: #062016; --accent-soft: #1a3a2d;
-    --chalk: #e9f1ec; --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
+    --bg: #121211; --surface: #1d1d1b; --surface-2: #2a2a27; --line: #363633;
+    --fg: #f1f1ef; --fg-2: #bdbdb8; --fg-3: #92928d;
+    --accent: #ec4d5c; --accent-strong: #ff8d97; --accent-fg: #ffffff; --accent-soft: #3d1a1f;
+    --ink: #2b2b28; --ink-fg: #ffffff; --ink-line: #48483f;
+    --ok: #6fcf9a; --ok-soft: #173326;
+    --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0d1411; --surface: #152019; --surface-2: #1d2a23; --line: #2a3a32;
-  --fg: #e4ede7; --fg-2: #a7b7ad; --fg-3: #7d8d84;
-  --accent: #5bbd96; --accent-strong: #7fd0ae; --accent-fg: #062016; --accent-soft: #1a3a2d;
-  --chalk: #e9f1ec; --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
+  --bg: #121211; --surface: #1d1d1b; --surface-2: #2a2a27; --line: #363633;
+  --fg: #f1f1ef; --fg-2: #bdbdb8; --fg-3: #92928d;
+  --accent: #ec4d5c; --accent-strong: #ff8d97; --accent-fg: #ffffff; --accent-soft: #3d1a1f;
+  --ink: #2b2b28; --ink-fg: #ffffff; --ink-line: #48483f;
+  --ok: #6fcf9a; --ok-soft: #173326;
+  --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
   color-scheme: dark;
 }
@@ -74,7 +82,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
-h1 { font-size: 1.9rem; font-weight: 750; line-height: 1.1; }
+h1 { font-size: 2rem; font-weight: 700; line-height: 1.1; }
 h2 { font-size: 1.15rem; font-weight: 700; }
 h3 { font-size: 1rem; font-weight: 700; }
 p { margin: 0; }
@@ -100,9 +108,22 @@ p { margin: 0; }
 .grow { flex: 1 1 auto; min-width: 0; }
 .stack { display: grid; gap: 8px; }
 
+/* Kopfband im NGG-Stil */
+.brand { background: var(--surface); border-bottom: 3px solid var(--accent); padding-top: env(safe-area-inset-top, 0px); }
+.brand-in { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 10px; min-height: 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.brand-mark { background: var(--accent); color: #fff; font-family: var(--f-display); font-weight: 800; font-size: .95rem; letter-spacing: .06em; padding: 3px 7px 2px; border-radius: 3px; }
+.brand-name { font-family: var(--f-display); font-weight: 700; font-size: 1.08rem; letter-spacing: .01em; }
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 700; color: var(--fg-3); background: none; border: 0; padding: 4px; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-3); }
+.sync.ok i { background: var(--ok); }
+.sync.busy i { background: var(--warn); }
+.sync.err i { background: var(--danger); }
+.factor-tag { font-size: .72rem; font-weight: 800; color: var(--accent-strong); background: var(--accent-soft); border-radius: 4px; padding: 1px 5px; }
+
 /* Pills & Chips */
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 700; background: var(--surface-2); color: var(--fg-2); white-space: nowrap; }
-.pill.ok { background: var(--accent-soft); color: var(--accent-strong); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
 .pill.free { background: var(--warn-soft); color: var(--warn); }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -122,6 +143,7 @@ p { margin: 0; }
   background: var(--surface); color: var(--fg); font-weight: 700;
 }
 .btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .btn.danger { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--fg-2); }
@@ -153,16 +175,17 @@ textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monosp
 
 /* Timer */
 .timer { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 16px; box-shadow: var(--shadow); }
-.timer.running { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.timer.running .eyebrow, .timer.running .muted { color: var(--accent-fg); opacity: .8; }
-.timer.running input, .timer.running .step { background: color-mix(in srgb, var(--accent-fg) 14%, var(--accent)); border-color: color-mix(in srgb, var(--accent-fg) 30%, var(--accent)); color: var(--accent-fg); }
-.timer.running .chip { background: transparent; border-color: color-mix(in srgb, var(--accent-fg) 35%, var(--accent)); color: var(--accent-fg); }
-.timer.running .chip[aria-pressed="true"] { background: var(--accent-fg); color: var(--accent); border-color: var(--accent-fg); }
+.timer.running { background: var(--ink); border-color: var(--ink); color: var(--ink-fg); border-top: 5px solid var(--accent); }
+.timer.running .eyebrow, .timer.running .muted { color: var(--ink-fg); opacity: .75; }
+.timer.running input, .timer.running .step { background: color-mix(in srgb, var(--ink-fg) 9%, var(--ink)); border-color: var(--ink-line); color: var(--ink-fg); }
+.timer.running .chip { background: transparent; border-color: var(--ink-line); color: var(--ink-fg); }
+.timer.running .chip[aria-pressed="true"] { background: var(--ink-fg); color: var(--ink); border-color: var(--ink-fg); }
 .timer.running .chip[aria-pressed="true"] .dot { box-shadow: none; }
-.timer.running .linkbtn { color: var(--accent-fg); }
-.timer.running .btn.primary { background: var(--accent-fg); color: var(--accent); border-color: var(--accent-fg); }
-.timer.running .btn.ghost { color: var(--accent-fg); }
-.elapsed { font-family: var(--f-display); font-weight: 800; font-size: clamp(3rem, 16vw, 4.4rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.timer.running .linkbtn { color: var(--ink-fg); }
+.timer.running .btn.ghost { color: var(--ink-fg); }
+.timer.running .switch input { background: color-mix(in srgb, var(--ink-fg) 12%, var(--ink)); border-color: var(--ink-line); }
+.timer.running .switch input:checked { background: var(--accent); border-color: var(--accent); }
+.elapsed { font-family: var(--f-display); font-weight: 700; font-size: clamp(3.2rem, 18vw, 4.8rem); line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .since { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .since input { width: 9em; min-height: 40px; font-weight: 700; }
 
@@ -207,7 +230,7 @@ textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monosp
 
 /* Auswertung */
 .total { display: grid; gap: 4px; }
-.total .big { font-family: var(--f-display); font-weight: 800; font-size: clamp(2.6rem, 13vw, 3.6rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.total .big { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.8rem, 14vw, 3.8rem); line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .chart { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 0 8px; }
 .ch-y { position: relative; width: 2.4em; font-size: .72rem; color: var(--fg-3); font-variant-numeric: tabular-nums; }
 .ch-y span { position: absolute; right: 0; transform: translateY(50%); }
@@ -306,6 +329,7 @@ details[open].card summary::after { content: "▴"; }
 </style>
 </head>
 <body>
+<header class="brand"><div class="brand-in"><span class="brand-mark" aria-hidden="true">NGG</span><span class="brand-name">Zeiterfassung</span><span class="grow"></span><span id="sync-pill"></span></div></header>
 <main class="app" id="view" aria-live="polite"></main>
 
 <nav class="nav" aria-label="Hauptnavigation"><div class="nav-in" id="nav"></div></nav>
@@ -328,6 +352,11 @@ details[open].card summary::after { content: "▴"; }
    ============================================================ */
 
 const STORE_KEY = 'lehrkraft-zeiterfassung-v1';
+
+/* OneDrive: Anwendungs-ID (Client-ID) der App-Registrierung in Microsoft Entra.
+   Leer lassen, dann kann die ID in der App unter „Mehr → Erweitert“ eingetragen werden. */
+const ONEDRIVE_CLIENT_ID = '';
+const DEFAULT_FACTOR = 1.6;
 
 const PRESET_LABELS = [
   { id: 'unterricht',   name: 'Unterricht',                         color: '#2a78d6' },
@@ -412,6 +441,11 @@ function defaults() {
     holidays: {},      // { "2026": { at, list: [{from,to,name}] } } für S.state
     freeDays: [],      // eigene freie Tage [{id, from, to, name}]
     onboarded: false,
+    welcomed: false,
+    factor: DEFAULT_FACTOR,
+    del: {},           // Löschmarken für den Abgleich {id: Zeitpunkt}
+    su: 0,             // Zeitpunkt der letzten Einstellungsänderung
+    runU: 0,           // Zeitpunkt der letzten Timer-Änderung
   };
 }
 let S;
@@ -430,11 +464,50 @@ function migrate(d) {
   return out;
 }
 let storageOk = true;
-function save() {
+function persist() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageOk = true; }
   catch (e) { storageOk = false; }
 }
+
+/* Änderungsverfolgung für den Abgleich: Jede Speicherung vergleicht mit dem letzten Stand
+   und versieht geänderte Einträge mit einem Zeitstempel bzw. gelöschte mit einer Löschmarke. */
+const SYNC_COLLS = ['entries', 'slots', 'labels', 'freeDays'];
+const SETTINGS_KEYS = ['state', 'periods', 'plan', 'factor'];
+let snap = null;
+const strip = (x) => { const { u, ...r } = x; return JSON.stringify(r); };
+function takeSnap() {
+  snap = {};
+  for (const c of SYNC_COLLS) snap[c] = new Map(S[c].map((x) => [x.id, strip(x)]));
+  snap.set = JSON.stringify(SETTINGS_KEYS.map((k) => S[k]));
+  snap.run = JSON.stringify(S.running);
+}
+function stamp() {
+  const now = Date.now();
+  S.del = S.del || {};
+  for (const c of SYNC_COLLS) {
+    const seen = new Set();
+    for (const x of S[c]) {
+      seen.add(x.id);
+      if (snap[c].get(x.id) !== strip(x)) { x.u = now; delete S.del[x.id]; }
+    }
+    for (const id of snap[c].keys()) if (!seen.has(id)) S.del[id] = now;
+  }
+  if (JSON.stringify(SETTINGS_KEYS.map((k) => S[k])) !== snap.set) S.su = now;
+  if (JSON.stringify(S.running) !== snap.run) S.runU = now;
+  takeSnap();
+}
+function save() {
+  stamp();
+  persist();
+  Sync.schedule();
+}
 S = load();
+takeSnap();
+
+/* Faktor: angerechnete Zeit eines Eintrags */
+const factorVal = () => (S.factor > 0 ? S.factor : DEFAULT_FACTOR);
+const fmtFactor = () => factorVal().toLocaleString('de-DE');
+const cnt = (e) => dur(e) * (e.f ? factorVal() : 1);
 
 /* ---------- Labels ---------- */
 const labelById = (id) => S.labels.find((l) => l.id === id) || { id, name: 'Unbekannt', color: '#8a8a8a' };
@@ -543,7 +616,7 @@ function generatePlan(from, to, forAuto = false) {
     for (const s of slots) {
       const key = `${s.id}|${d}`;
       if (existing.has(key) || skip.has(key)) continue;
-      const e = { id: uid(), date: d, start: s.start, end: s.end, labelId: s.labelId, note: s.title || '', source: 'plan', planKey: key };
+      const e = { id: uid(), date: d, start: s.start, end: s.end, labelId: s.labelId, note: s.title || '', source: 'plan', planKey: key, f: !!s.f };
       S.entries.push(e); created.push(e.id); existing.add(key);
     }
   }
@@ -579,6 +652,7 @@ const ui = {
   tab: 'heute',
   startDirty: false, endDirty: false, startVal: '', endVal: '',
   timerLabel: S.lastLabel || 'unterricht',
+  timerF: false,
   weekOff: 0,
   planDay: Math.min(Math.max(wd(today()), 1), 5),
   rep: { mode: 'week', off: 0, from: '', to: '', labels: null, sel: -1 },
@@ -598,6 +672,7 @@ function renderNav() {
 }
 function render() {
   renderNav();
+  renderSyncPill();
   const v = $('#view');
   const fn = { heute: viewHeute, eintraege: viewEintraege, plan: viewPlan, auswertung: viewAuswertung, mehr: viewMehr }[ui.tab] || viewHeute;
   v.innerHTML = fn();
@@ -611,10 +686,11 @@ function entryRow(e, showDate = false) {
     <span class="time">${showDate ? fmtDateShort(e.date) + ' ' : ''}${e.start}–${e.end}</span>
     <span class="meta"><span class="lbl"><span class="dot" style="background:${esc(l.color)}"></span><span>${esc(l.name)}</span></span>
       ${e.note ? `<span class="note">${esc(e.note)}</span>` : ''}</span>
-    <span class="dur">${e.source === 'plan' ? ICON.cal : ''}${fmtDur(dur(e))}</span></button>`;
+    <span class="dur">${e.source === 'plan' ? ICON.cal : ''}${e.f ? `<span class="factor-tag" title="${fmtDur(dur(e))} × ${fmtFactor()}">×${fmtFactor()}</span>` : ''}${fmtDur(cnt(e))}</span></button>`;
 }
 const entriesOn = (d) => S.entries.filter((e) => e.date === d).sort((a, b) => a.start.localeCompare(b.start));
-const sumMin = (list) => list.reduce((a, e) => a + dur(e), 0);
+const sumMin = (list) => list.reduce((a, e) => a + cnt(e), 0);
+const sumRaw = (list) => list.reduce((a, e) => a + dur(e), 0);
 
 function dayStatus(d) {
   const r = freeReason(d);
@@ -636,6 +712,7 @@ function viewHeute() {
       <div class="section-head"><p class="eyebrow">Neue Zeit erfassen</p></div>
       ${labelChips(ui.timerLabel, 'data-a="timerLabel"')}
       ${timeField('start', 'Beginn', ui.startDirty)}
+      ${factorSwitch('t-f', ui.timerF, 'data-c="timerF"')}
       <label class="f" for="t-note"><span>Notiz <span class="muted">(optional)</span></span>
         <input type="text" id="t-note" placeholder="z. B. Klassenarbeit 8b" autocomplete="off"></label>
       <button type="button" class="btn primary big block" data-a="startTimer" id="t-startbtn">${ICON.play}<span>Jetzt starten</span></button>
@@ -649,6 +726,7 @@ function viewHeute() {
       <div class="since"><label for="t-runstart" class="muted">Begonnen ${sd !== t ? 'am ' + fmtDateShort(sd) + ' ' : ''}um</label>
         <input type="time" id="t-runstart" value="${st}"></div>
       ${labelChips(run.labelId, 'data-a="runLabel"', false)}
+      ${factorSwitch('t-runf', !!run.f, 'data-c="runF"')}
       ${run.note ? `<p class="muted small">Notiz: ${esc(run.note)}</p>` : ''}
       ${timeField('end', 'Ende', ui.endDirty)}
       <button type="button" class="btn primary big block" data-a="stopTimer" id="t-stopbtn">${ICON.stop}<span>Jetzt beenden</span></button>
@@ -682,6 +760,10 @@ function viewHeute() {
       <div class="stat"><span class="eyebrow">Davon Unterricht</span><b>${fmtDur(sumMin(week.filter((e) => e.labelId === 'unterricht' || e.labelId === 'vertretung')))}</b><span class="muted small">inkl. Vertretung</span></div>
     </section>`;
 }
+function factorSwitch(id, on, attr) {
+  return `<label class="switch" for="${id}"><span><b>Faktor ${fmtFactor()} anrechnen</b><br><span class="muted small">Zeit wird mit ${fmtFactor()} multipliziert</span></span>
+    <input type="checkbox" id="${id}" ${attr} ${on ? 'checked' : ''}></label>`;
+}
 function timeField(which, label, dirty) {
   return `<div class="tf">
     <div class="tf-head"><label class="tf-label" for="t-${which}">${label}</label>
@@ -711,7 +793,7 @@ function tick() {
     let s = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
     el.textContent = `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
     document.title = `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)} · ${labelById(S.running.labelId).name}`;
-  } else document.title = 'Zeiterfassung für Lehrkräfte';
+  } else document.title = 'NGG Zeiterfassung';
 }
 setInterval(tick, 1000);
 
@@ -788,7 +870,7 @@ function viewPlan() {
           <span class="per num">${periodName(s)}</span>
           <span class="meta" style="min-width:0;display:grid;gap:2px"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || l.name)}</b>
             <span class="row small" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="background:${esc(l.color)}"></span><span class="muted">${esc(l.name)}</span></span>${validity}</span>
-          <span class="num muted small">${fmtDur(dur(s))}</span></button>`;
+          <span class="num muted small">${s.f ? `<span class="factor-tag">×${fmtFactor()}</span> ` : ''}${fmtDur(dur(s))}</span></button>`;
       }).join('') : '<p class="empty">Keine festen Stunden an diesem Tag.</p>'}</div>
       <button class="btn primary block" data-a="newSlot">${ICON.plus}<span>Stunde hinzufügen</span></button>
     </section>`;
@@ -840,7 +922,7 @@ function viewAuswertung() {
   const total = sumMin(list);
   const perLabel = allLabels.filter((l) => sel.has(l.id)).map((l) => {
     const items = list.filter((e) => e.labelId === l.id);
-    return { l, min: sumMin(items), n: items.length };
+    return { l, min: sumMin(items), raw: sumRaw(items), n: items.length };
   }).filter((p) => p.n > 0).sort((a, b) => b.min - a.min);
   const workDays = new Set(list.map((e) => e.date)).size;
   // Durchschnitt pro Woche nur über die bereits vergangene Zeit des Zeitraums
@@ -856,7 +938,9 @@ function viewAuswertung() {
   const top = Math.ceil(maxH / step) * step;
   const ticks = []; for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
   const order = perLabel.map((p) => p.l.id);
-  const ustdMin = sumMin(list.filter((e) => e.labelId === 'unterricht' || e.labelId === 'vertretung'));
+  const ustdList = list.filter((e) => e.labelId === 'unterricht' || e.labelId === 'vertretung');
+  const ustdMin = sumMin(ustdList), ustdRaw = sumRaw(ustdList);
+  const bonus = total - sumRaw(list);
   const xEvery = Math.ceil(bk.length / 12);
   const chart = `
     <div class="chart" id="chart">
@@ -890,7 +974,8 @@ function viewAuswertung() {
     </section>
     <section class="card">
       <div class="total"><span class="eyebrow">Arbeitszeit im Zeitraum</span><span class="big">${fmtDur(total)}</span>
-        <span class="muted small num">${fmtDec(total)} Stunden · ${list.length} Einträge · ${workDays} Arbeitstage${workDays ? ` · Ø ${fmtDur(total / workDays)} pro Arbeitstag` : ''}${spanDays >= 7 ? ` · Ø ${fmtDur(total / (spanDays / 7))} pro Woche` : ''}</span></div>
+        <span class="muted small num">${fmtDec(total)} Stunden · ${list.length} Einträge · ${workDays} Arbeitstage${workDays ? ` · Ø ${fmtDur(total / workDays)} pro Arbeitstag` : ''}${spanDays >= 7 ? ` · Ø ${fmtDur(total / (spanDays / 7))} pro Woche` : ''}</span>
+        ${bonus > 0 ? `<span class="small"><span class="factor-tag">×${fmtFactor()}</span> Davon ${fmtDur(bonus)} durch Faktor (ohne Faktor: ${fmtDur(total - bonus)})</span>` : ''}</div>
       ${list.length ? chart : '<p class="empty">Keine Einträge für diese Auswahl.</p>'}
     </section>
     ${perLabel.length ? `<section class="card">
@@ -899,9 +984,9 @@ function viewAuswertung() {
         <div class="brk-top"><span class="n"><span class="dot" style="background:${esc(p.l.color)}"></span>${esc(p.l.name)}</span>
           <span class="v">${fmtDur(p.min)} <span class="muted small">· ${total ? Math.round(p.min / total * 100) : 0} %</span></span></div>
         <div class="brk-bar"><i style="width:${total ? p.min / total * 100 : 0}%;background:${esc(p.l.color)}"></i></div>
-        <span class="muted small">${p.n} ${p.n === 1 ? 'Eintrag' : 'Einträge'}${(p.l.id === 'unterricht' || p.l.id === 'vertretung') && p.min ? ` · entspricht ${fmtDec(p.min / 45 * 60, 1)} Unterrichtsstunden à 45 min` : ''}</span>
+        <span class="muted small">${p.n} ${p.n === 1 ? 'Eintrag' : 'Einträge'}${(p.l.id === 'unterricht' || p.l.id === 'vertretung') && p.min ? ` · entspricht ${fmtDec(p.raw / 45 * 60, 1)} Unterrichtsstunden à 45 min` : ''}${p.min !== p.raw ? ` · ohne Faktor ${fmtDur(p.raw)}` : ''}</span>
       </div>`).join('')}</div>
-      ${ustdMin && perLabel.length > 1 ? `<p class="muted small">Unterricht und Vertretung zusammen: ${fmtDur(ustdMin)} (${fmtDec(ustdMin / 45 * 60, 1)} UStd). Alles andere: ${fmtDur(total - ustdMin)}.</p>` : ''}
+      ${ustdMin && perLabel.length > 1 ? `<p class="muted small">Unterricht und Vertretung zusammen: ${fmtDur(ustdMin)} (${fmtDec(ustdRaw / 45 * 60, 1)} UStd). Alles andere: ${fmtDur(total - ustdMin)}.</p>` : ''}
     </section>` : ''}
     <div class="grid2">
       <button class="btn" data-a="csv">CSV exportieren</button>
@@ -970,6 +1055,15 @@ function viewMehr() {
       <button class="btn sm" data-a="newFree">${ICON.plus}<span>Freie Tage hinzufügen</span></button>
     </section>
 
+    ${storageCard()}
+
+    <section class="card">
+      <h2>Faktor</h2>
+      <p class="muted small">Zeiten mit gesetztem Haken „Faktor anrechnen“ werden mit diesem Wert multipliziert (Standard 1,6). Der Haken ist bei neuen Zeiten immer aus.</p>
+      <label class="f" for="set-factor">Faktor
+        <input type="text" inputmode="decimal" id="set-factor" data-c="factor" value="${fmtFactor()}"></label>
+    </section>
+
     <section class="card">
       <h2>Labels</h2>
       <div class="list">${S.labels.map((l) => `
@@ -992,7 +1086,7 @@ function viewMehr() {
 
     <section class="card">
       <h2>Datensicherung</h2>
-      <p class="muted small">Alle Daten liegen nur in diesem Browser auf diesem Gerät. Sichere sie regelmäßig als Datei – damit kannst du sie auch auf ein anderes Gerät übertragen.</p>
+      <p class="muted small">Sicherung als Datei, z. B. in iCloud Drive: „Sicherung speichern“ → „In Dateien sichern“. Damit kannst du Daten auch ohne OneDrive auf ein anderes Gerät übertragen.</p>
       <div class="grid2">
         <button class="btn" data-a="exportJson">Sicherung speichern</button>
         <button class="btn" data-a="exportCopy">Sicherung kopieren</button>
@@ -1035,7 +1129,7 @@ function entrySheet(entry, date) {
   const nm = roundDown5(nowMin());
   const e = entry ? { ...entry } : {
     date: date || today(), start: fromMin(nm - 60), end: fromMin(nm),
-    labelId: S.lastLabel || 'unterricht', note: '', source: 'manual',
+    labelId: S.lastLabel || 'unterricht', note: '', source: 'manual', f: false,
   };
   if (!S.labels.some((l) => l.id === e.labelId && !l.hidden) && isNew) e.labelId = visibleLabels()[0]?.id;
   const html = () => `
@@ -1049,17 +1143,19 @@ function entrySheet(entry, date) {
     <div class="row"><span class="muted small">Dauer:</span><b class="num" id="e-dur"></b><span class="grow"></span></div>
     <div class="chips" aria-label="Dauer schnell setzen">${[30, 45, 60, 90, 120, 180].map((m) => `<button type="button" class="chip" data-s="setDur" data-m="${m}" style="min-height:36px;padding:5px 12px">${m < 60 ? m + ' min' : fmtDec(m, 1) + ' h'}</button>`).join('')}</div>
     <div class="stack"><span class="tf-label">Label</span><div id="e-labels">${labelChips(e.labelId, 'data-s="label"', false)}</div></div>
+    ${factorSwitch('e-f', !!e.f, '')}
     <label class="f" for="e-note">Notiz<input type="text" id="e-note" value="${esc(e.note)}" placeholder="z. B. 9c Deutsch, Elternabend …" autocomplete="off"></label>
     <div class="sheet-actions">
       ${isNew ? '<button class="btn" data-s="cancel">Abbrechen</button>' : '<button class="btn danger" data-s="delete">Löschen</button>'}
       <button class="btn primary" data-s="save">Speichern</button></div>`;
   openSheet(html(), (b) => {
     const upd = () => {
-      const s = $('#e-start', b).value, en = $('#e-end', b).value;
-      $('#e-dur', b).textContent = s && en ? fmtDur(dur({ start: s, end: en })) + (toMin(en) < toMin(s) ? ' (bis nach Mitternacht)' : '') : '–';
+      const s = $('#e-start', b).value, en = $('#e-end', b).value, f = $('#e-f', b).checked;
+      $('#e-dur', b).textContent = s && en ? fmtDur(dur({ start: s, end: en })) + (f ? ` × ${fmtFactor()} = ${fmtDur(cnt({ start: s, end: en, f }))}` : '') + (toMin(en) < toMin(s) ? ' (bis nach Mitternacht)' : '') : '–';
     };
     upd();
     b.oninput = upd;
+    b.onchange = upd;
     b.onclick = (ev) => {
       const a = ev.target.closest('[data-s]'); if (!a) return;
       const act = a.dataset.s;
@@ -1071,7 +1167,7 @@ function entrySheet(entry, date) {
         const date = $('#e-date', b).value, start = $('#e-start', b).value, end = $('#e-end', b).value;
         if (!date || !start || !end) return toast('Bitte Datum, Beginn und Ende ausfüllen.');
         if (start === end) return toast('Beginn und Ende sind gleich.');
-        const out = { ...e, date, start, end, note: $('#e-note', b).value.trim() };
+        const out = { ...e, date, start, end, note: $('#e-note', b).value.trim(), f: $('#e-f', b).checked };
         if (isNew) { out.id = uid(); S.entries.push(out); }
         else {
           const i = S.entries.findIndex((x) => x.id === entry.id);
@@ -1080,7 +1176,7 @@ function entrySheet(entry, date) {
         }
         S.lastLabel = out.labelId;
         save(); closeSheet(); render();
-        toast(isNew ? `Gespeichert: ${fmtDur(dur(out))} ${labelById(out.labelId).name}` : 'Änderungen gespeichert');
+        toast(isNew ? `Gespeichert: ${fmtDur(cnt(out))} ${labelById(out.labelId).name}` : 'Änderungen gespeichert');
       }
     };
   });
@@ -1101,7 +1197,7 @@ function deleteEntry(id) {
 /* Stundenplan-Stunde */
 function slotSheet(slot) {
   const isNew = !slot;
-  const s = slot ? { ...slot } : { wd: ui.planDay, start: S.periods[0]?.start || '08:00', end: S.periods[0]?.end || '08:45', pFrom: 0, pTo: 0, labelId: 'unterricht', title: '', validFrom: '', validTo: '' };
+  const s = slot ? { ...slot } : { wd: ui.planDay, start: S.periods[0]?.start || '08:00', end: S.periods[0]?.end || '08:45', pFrom: 0, pTo: 0, labelId: 'unterricht', title: '', validFrom: '', validTo: '', f: false };
   const days = new Set([s.wd]);
   const perOpts = (sel) => `<option value="">frei</option>` + S.periods.map((p, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${i + 1}. (${p.start}–${p.end})</option>`).join('');
   openSheet(`
@@ -1116,6 +1212,7 @@ function slotSheet(slot) {
     </div>
     <label class="f" for="s-title">Bezeichnung<input type="text" id="s-title" value="${esc(s.title)}" placeholder="z. B. 8b Mathematik" autocomplete="off"></label>
     <div class="stack"><span class="tf-label">Label</span>${labelChips(s.labelId, 'data-s="label"', false)}</div>
+    ${factorSwitch('s-f', !!s.f, '')}
     <details><summary class="small" style="cursor:pointer;font-weight:700">Gültigkeit (z. B. nur 1. Halbjahr)</summary>
       <div class="grid2" style="margin-top:10px">
         <label class="f" for="s-vfrom">Gültig ab<input type="date" id="s-vfrom" value="${esc(s.validFrom)}"></label>
@@ -1157,7 +1254,7 @@ function slotSheet(slot) {
         const base = {
           start, end, labelId: s.labelId, title: $('#s-title', b).value.trim(),
           pFrom: pf.value === '' ? null : +pf.value, pTo: pt.value === '' ? null : +pt.value,
-          validFrom: $('#s-vfrom', b).value, validTo: $('#s-vto', b).value,
+          validFrom: $('#s-vfrom', b).value, validTo: $('#s-vto', b).value, f: $('#s-f', b).checked,
         };
         if (isNew) {
           // Automatisch erst ab heute eintragen; Vergangenes über „Zeitraum eintragen“ nachholen.
@@ -1322,9 +1419,9 @@ async function copyText(text, what) {
 function backupJson() { return JSON.stringify({ app: 'lehrkraft-zeiterfassung', exported: new Date().toISOString(), data: { ...S, running: S.running } }, null, 1); }
 function csvFor(list) {
   const q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Datum', 'Wochentag', 'Beginn', 'Ende', 'Dauer (h)', 'Dauer (h:mm)', 'Label', 'Notiz', 'Quelle'].join(';')];
+  const rows = [['Datum', 'Wochentag', 'Beginn', 'Ende', 'Dauer (h)', 'Faktor', 'Angerechnet (h)', 'Angerechnet (h:mm)', 'Label', 'Notiz', 'Quelle'].join(';')];
   for (const e of list.slice().sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))) {
-    rows.push([fmtDate(e.date), WD_SHORT[wd(e.date)], e.start, e.end, fmtDec(dur(e), 2), fmtDur(dur(e)).replace(' h', ''), q(labelById(e.labelId).name), q(e.note),
+    rows.push([fmtDate(e.date), WD_SHORT[wd(e.date)], e.start, e.end, fmtDec(dur(e), 2), e.f ? fmtFactor() : '1', fmtDec(cnt(e), 2), fmtDur(cnt(e)).replace(' h', ''), q(labelById(e.labelId).name), q(e.note),
       e.source === 'plan' ? 'Stundenplan' : e.source === 'timer' ? 'Timer' : 'manuell'].join(';'));
   }
   return '﻿' + rows.join('\r\n');
@@ -1342,7 +1439,7 @@ function importData(text) {
   confirmSheet({
     title: 'Sicherung einlesen?',
     text: `Die Sicherung enthält ${data.entries.length} Einträge. Deine aktuellen Daten (${S.entries.length} Einträge) werden dabei ersetzt.`,
-    ok: 'Ersetzen', onOk: () => { S = migrate(data); save(); render(); toast('Sicherung eingelesen'); },
+    ok: 'Ersetzen', onOk: () => { const del = S.del; S = migrate(data); S.del = { ...del, ...(S.del || {}) }; S.welcomed = true; save(); render(); toast('Sicherung eingelesen'); },
   });
 }
 
@@ -1375,7 +1472,8 @@ const actions = {
     const t = ui.startDirty ? ($('#t-start').value || hm(now)) : hm(now);
     // Liegt die eingestellte Zeit nach „jetzt“ und ist es früh am Morgen, war vermutlich gestern Abend gemeint.
     if (ui.startDirty && toMin(t) > nowMin() && nowMin() < 360) date = addDays(date, -1);
-    S.running = { start: `${date}T${t}`, labelId: ui.timerLabel, note: ($('#t-note')?.value || '').trim() };
+    S.running = { start: `${date}T${t}`, labelId: ui.timerLabel, note: ($('#t-note')?.value || '').trim(), f: ui.timerF };
+    ui.timerF = false;
     S.lastLabel = ui.timerLabel;
     ui.startDirty = false; ui.endDirty = false;
     save(); render();
@@ -1384,13 +1482,13 @@ const actions = {
     const run = S.running; if (!run) return;
     const [date, start] = run.start.split('T');
     const end = ui.endDirty ? ($('#t-end').value || hm(new Date())) : hm(new Date());
-    const e = { id: uid(), date, start, end, labelId: run.labelId, note: run.note || '', source: 'timer' };
+    const e = { id: uid(), date, start, end, labelId: run.labelId, note: run.note || '', source: 'timer', f: !!run.f };
     const startMs = new Date(run.start).getTime();
     if (dur(e) === 0) return toast('Ende ist gleich Beginn – nichts gespeichert.');
     if (Date.now() - startMs > 26 * 3600e3) toast('Hinweis: Der Timer lief über einen Tag. Bitte Eintrag prüfen.');
     S.entries.push(e); S.running = null; ui.endDirty = false;
     save(); render();
-    toast(`Gespeichert: ${fmtDur(dur(e))} ${labelById(e.labelId).name}`, () => { S.entries = S.entries.filter((x) => x.id !== e.id); S.running = run; save(); render(); });
+    toast(`Gespeichert: ${fmtDur(cnt(e))} ${labelById(e.labelId).name}`, () => { S.entries = S.entries.filter((x) => x.id !== e.id); S.running = run; save(); render(); });
   },
   discardTimer: () => confirmSheet({ title: 'Timer verwerfen?', text: 'Die laufende Zeit wird nicht gespeichert.', ok: 'Verwerfen', onOk: () => { S.running = null; save(); render(); } }),
   newEntry: (a) => entrySheet(null, a.dataset.date),
@@ -1434,8 +1532,11 @@ const actions = {
     b.onclick = (ev) => { const x = ev.target.closest('[data-s]'); if (!x) return; const txt = $('#imp-text', b).value; closeSheet(); if (x.dataset.s === 'go') importData(txt); };
   }),
   wipe: () => confirmSheet({ title: 'Alle Daten löschen?', text: 'Alle Einträge, der Stundenplan, eigene Labels und Einstellungen werden von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen.', ok: 'Alles löschen',
-    onOk: () => { S = defaults(); save(); render(); toast('Alle Daten gelöscht'); } }),
+    onOk: () => { const del = S.del; S = defaults(); S.del = del; S.welcomed = true; save(); render(); toast('Alle Daten gelöscht'); } }),
   dismissOnboarding: () => { S.onboarded = true; save(); render(); },
+  msConnect: () => msConnect(),
+  msDisconnect: () => msDisconnect(),
+  syncNow: () => { SY.err = ''; Sync.now(); },
 };
 
 document.addEventListener('click', (e) => {
@@ -1457,6 +1558,14 @@ document.addEventListener('change', (e) => {
     S.running.start = `${date}T${t.value}`; save(); tick(); return;
   }
   if (!c) return;
+  if (c === 'timerF') { ui.timerF = t.checked; return; }
+  if (c === 'runF' && S.running) { S.running.f = t.checked; save(); return; }
+  if (c === 'factor') {
+    const v = parseFloat(String(t.value).replace(',', '.'));
+    if (v > 0 && v < 10) { S.factor = Math.round(v * 100) / 100; save(); render(); } else { toast('Bitte einen Faktor zwischen 0 und 10 eingeben.'); render(); }
+    return;
+  }
+  if (c === 'clientId') { SY.clientId = t.value.trim(); saveSync(); render(); return; }
   if (c === 'planAuto') {
     S.plan.auto = t.checked;
     if (t.checked && !S.plan.from) S.plan.from = today();
@@ -1477,6 +1586,219 @@ document.addEventListener('change', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
 
+
+/* ---------- OneDrive-Abgleich (Microsoft Graph, Anmeldung per OAuth 2.0 mit PKCE) ---------- */
+const SYNC_KEY = STORE_KEY + '-onedrive';
+const MS_AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
+const GRAPH = 'https://graph.microsoft.com/v1.0';
+const MS_SCOPES = 'offline_access User.Read Files.ReadWrite.AppFolder';
+const REMOTE_FILE = '/me/drive/special/approot:/zeiterfassung.json';
+let SY = {};
+try { SY = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}') || {}; } catch (e) { SY = {}; }
+function saveSync() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(SY)); } catch (e) { /* egal */ } }
+const clientId = () => ONEDRIVE_CLIENT_ID || SY.clientId || '';
+const redirectUri = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const connected = () => !!(SY.tok && SY.tok.refresh);
+
+function b64url(bytes) { return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function randomStr(n) { const a = new Uint8Array(n); crypto.getRandomValues(a); return b64url(a).slice(0, n); }
+
+async function msConnect() {
+  if (!clientId()) { toast('OneDrive ist noch nicht eingerichtet: Client-ID fehlt (siehe „Mehr → Erweitert“).'); return; }
+  if (!window.crypto || !crypto.subtle || location.protocol !== 'https:') { toast('Die Anmeldung funktioniert nur in der installierten App (https).'); return; }
+  const verifier = randomStr(64), state = randomStr(20);
+  SY.pkce = { verifier, state }; saveSync();
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  location.href = `${MS_AUTH}/authorize?` + new URLSearchParams({
+    client_id: clientId(), response_type: 'code', redirect_uri: redirectUri(), response_mode: 'query',
+    scope: MS_SCOPES, code_challenge: challenge, code_challenge_method: 'S256', state, prompt: 'select_account',
+  });
+}
+async function tokenRequest(params) {
+  const res = await fetch(`${MS_AUTH}/token`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: clientId(), scope: MS_SCOPES, ...params }) });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) { const err = new Error(j.error_description || j.error || 'Token-Fehler'); err.auth = true; throw err; }
+  return { access: j.access_token, refresh: j.refresh_token || SY.tok?.refresh, exp: Date.now() + ((j.expires_in || 3600) - 120) * 1000 };
+}
+async function handleAuthRedirect() {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('code') && !p.has('error')) return false;
+  history.replaceState(null, '', location.pathname + location.hash);
+  if (p.get('error')) { toast('OneDrive-Anmeldung nicht abgeschlossen: ' + (p.get('error_description') || p.get('error')).slice(0, 120)); return true; }
+  if (!SY.pkce || p.get('state') !== SY.pkce.state) { toast('Anmeldung ungültig – bitte erneut verbinden.'); return true; }
+  try {
+    SY.tok = await tokenRequest({ grant_type: 'authorization_code', code: p.get('code'), redirect_uri: redirectUri(), code_verifier: SY.pkce.verifier });
+    SY.pkce = null; SY.needLogin = false; SY.err = '';
+    saveSync();
+    try { const me = await (await graph('/me')).json(); SY.account = me.userPrincipalName || me.mail || me.displayName || ''; saveSync(); } catch (e) { /* egal */ }
+    S.welcomed = true; persist();
+    toast('Mit OneDrive verbunden');
+    await Sync.now();
+  } catch (e) { SY.pkce = null; saveSync(); toast('OneDrive-Anmeldung fehlgeschlagen: ' + e.message.slice(0, 120)); }
+  render();
+  return true;
+}
+async function accessToken() {
+  if (!connected()) throw Object.assign(new Error('Nicht verbunden'), { auth: true });
+  if (Date.now() < SY.tok.exp) return SY.tok.access;
+  try { SY.tok = await tokenRequest({ grant_type: 'refresh_token', refresh_token: SY.tok.refresh }); saveSync(); return SY.tok.access; }
+  catch (e) { if (e.auth) { SY.needLogin = true; saveSync(); } throw e; }
+}
+async function graph(path, opts = {}) {
+  const t = await accessToken();
+  return fetch(GRAPH + path, { ...opts, headers: { ...(opts.headers || {}), authorization: 'Bearer ' + t } });
+}
+
+/* Zusammenführen zweier Datenstände: pro Eintrag gewinnt die neuere Änderung, Löschmarken gelten,
+   Einstellungen und Timer als Ganzes nach Zeitstempel. */
+const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+function payload(x) {
+  const o = {};
+  for (const c of SYNC_COLLS) o[c] = [...(x[c] || [])].sort(byId);
+  o.del = x.del || {}; o.planSkip = [...new Set(x.planSkip || [])].sort();
+  for (const k of SETTINGS_KEYS) o[k] = x[k];
+  o.su = x.su || 0; o.running = x.running || null; o.runU = x.runU || 0;
+  return o;
+}
+function canon(v) {
+  if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+  return JSON.stringify(v ?? null);
+}
+function mergeData(L, R) {
+  if (!R) return L;
+  const out = { ...L };
+  const del = { ...(R.del || {}) };
+  for (const [id, t] of Object.entries(L.del || {})) del[id] = Math.max(del[id] || 0, t);
+  for (const c of SYNC_COLLS) {
+    const map = new Map();
+    for (const x of R[c] || []) map.set(x.id, x);
+    for (const x of L[c] || []) { const r = map.get(x.id); if (!r || (x.u || 0) >= (r.u || 0)) map.set(x.id, x); }
+    out[c] = [...map.values()].filter((x) => !(del[x.id] && del[x.id] >= (x.u || 0)));
+  }
+  for (const p of PRESET_LABELS) if (!out.labels.some((l) => l.id === p.id)) out.labels.push({ ...p, preset: true, hidden: false });
+  out.del = del;
+  out.planSkip = [...new Set([...(L.planSkip || []), ...(R.planSkip || [])])];
+  if ((R.su || 0) > (L.su || 0)) { for (const k of SETTINGS_KEYS) if (R[k] !== undefined) out[k] = R[k]; out.su = R.su; }
+  if ((R.runU || 0) > (L.runU || 0)) { out.running = R.running || null; out.runU = R.runU; }
+  return out;
+}
+
+const Sync = {
+  busy: false, again: false, timer: null,
+  schedule() {
+    if (!connected()) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.now(), 1500);
+  },
+  async now() {
+    if (!connected() || SY.needLogin) return;
+    if (this.busy) { this.again = true; return; }
+    if (navigator.onLine === false) { SY.err = 'Offline – Abgleich folgt'; renderSyncPill(); return; }
+    this.busy = true; renderSyncPill();
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        let remote = null, eTag = null;
+        const meta = await graph(REMOTE_FILE);
+        if (meta.status !== 404) {
+          if (!meta.ok) throw new Error('OneDrive antwortet mit ' + meta.status);
+          const m = await meta.json();
+          eTag = m.eTag;
+          const dl = await fetch(m['@microsoft.graph.downloadUrl'], { cache: 'no-store' });
+          if (!dl.ok) throw new Error('Download fehlgeschlagen (' + dl.status + ')');
+          const j = await dl.json();
+          remote = j && j.data ? j.data : j;
+        }
+        // Zusammenführen direkt mit dem aktuellen Stand (keine await-Lücke)
+        const before = canon(payload(S));
+        const merged = mergeData(S, remote);
+        if (canon(payload(merged)) !== before) {
+          const oldState = S.state;
+          S = merged;
+          if (S.state !== oldState) S.holidays = {};
+          takeSnap(); persist(); render();
+        }
+        if (remote && canon(payload(remote)) === canon(payload(S))) break;   // nichts hochzuladen
+        const body = JSON.stringify({ app: 'lehrkraft-zeiterfassung', v: 1, saved: new Date().toISOString(), data: payload(S) });
+        const put = await graph(REMOTE_FILE + ':/content', { method: 'PUT', headers: { 'content-type': 'application/json', ...(eTag ? { 'if-match': eTag } : {}) }, body });
+        if (put.status === 412 || put.status === 409) continue;     // anderes Gerät war schneller → neu zusammenführen
+        if (!put.ok) throw new Error('Hochladen fehlgeschlagen (' + put.status + ')');
+        break;
+      }
+      SY.last = Date.now(); SY.err = '';
+    } catch (e) {
+      SY.err = e.auth ? 'Anmeldung abgelaufen' : (e.message || 'Abgleich fehlgeschlagen');
+    } finally {
+      this.busy = false; saveSync(); renderSyncPill();
+      if (ui.tab === 'mehr' && $('#sheet').hidden) render();
+      if (this.again) { this.again = false; this.schedule(); }
+    }
+  },
+};
+function msDisconnect() {
+  confirmSheet({
+    title: 'OneDrive trennen?', text: 'Die Daten bleiben auf diesem Gerät und in deinem OneDrive erhalten. Es wird nur nicht mehr abgeglichen.', ok: 'Trennen', danger: true,
+    onOk: () => { SY = { clientId: SY.clientId }; saveSync(); render(); toast('OneDrive getrennt'); },
+  });
+}
+function syncLabel() {
+  if (!connected()) return null;
+  if (SY.needLogin) return ['err', 'Anmelden'];
+  if (Sync.busy) return ['busy', 'Abgleich …'];
+  if (SY.err) return ['err', 'OneDrive ⚠'];
+  return ['ok', SY.last ? 'OneDrive ' + hm(new Date(SY.last)) : 'OneDrive'];
+}
+function renderSyncPill() {
+  const el = $('#sync-pill'); if (!el) return;
+  const l = syncLabel();
+  el.innerHTML = l ? `<button type="button" class="sync ${l[0]}" data-a="tab" data-id="mehr" aria-label="Abgleich: ${esc(l[1])}"><i></i>${esc(l[1])}</button>`
+    : `<button type="button" class="sync" data-a="tab" data-id="mehr"><i></i>Nur dieses Gerät</button>`;
+}
+function storageCard() {
+  const cid = clientId();
+  let body;
+  if (connected()) {
+    body = `
+      <p>Verbunden mit <b>OneDrive</b>${SY.account ? ` als <b>${esc(SY.account)}</b>` : ''}.</p>
+      <p class="muted small">Datei: OneDrive › Apps › (App-Name) › zeiterfassung.json${SY.last ? ` · zuletzt abgeglichen ${fmtDateShort(iso(new Date(SY.last)))} ${hm(new Date(SY.last))}` : ''}</p>
+      ${SY.needLogin ? `<div class="banner">Die Anmeldung ist abgelaufen. Bitte kurz neu anmelden – deine Daten bleiben erhalten.<button class="btn primary sm" data-a="msConnect">Erneut anmelden</button></div>`
+        : SY.err ? `<div class="banner">${esc(SY.err)}</div>` : ''}
+      <div class="grid2"><button class="btn" data-a="syncNow">Jetzt abgleichen</button><button class="btn ghost" data-a="msDisconnect">Trennen</button></div>`;
+  } else {
+    body = `
+      <p class="muted small">Mit OneDrive werden deine Zeiten automatisch zwischen Handy, Tablet und Computer abgeglichen. Anmeldung mit deinem Microsoft-Konto (privat oder Schule).</p>
+      <button class="btn primary block" data-a="msConnect" ${cid ? '' : 'disabled'}>Mit OneDrive verbinden</button>
+      ${cid ? '' : '<p class="muted small">Zum Verbinden fehlt noch die Client-ID der App-Registrierung (siehe „Erweitert“).</p>'}
+      <p class="muted small">iCloud lässt sich in Web-Apps nicht direkt anbinden. Du kannst aber unten jederzeit eine Sicherung in iCloud Drive ablegen.</p>`;
+  }
+  return `<section class="card">
+    <h2>Speicherort & Abgleich</h2>
+    ${body}
+    <details><summary class="small" style="cursor:pointer;font-weight:700">Erweitert: App-Registrierung</summary>
+      <div class="stack" style="margin-top:10px">
+        <label class="f" for="set-client">Client-ID (Anwendungs-ID)
+          <input type="text" id="set-client" data-c="clientId" value="${esc(SY.clientId || '')}" placeholder="${ONEDRIVE_CLIENT_ID ? 'fest eingebaut' : '00000000-0000-0000-0000-000000000000'}" autocomplete="off" spellcheck="false" ${ONEDRIVE_CLIENT_ID ? 'disabled' : ''}></label>
+        <p class="muted small">Umleitungs-URI für die Registrierung (Plattform „Single-Page-Anwendung“):<br><code style="word-break:break-all">${esc(redirectUri())}</code></p>
+      </div></details>
+  </section>`;
+}
+function welcomeSheet() {
+  const cid = clientId();
+  openSheet(`
+    <p class="eyebrow">Willkommen</p>
+    <h2 id="sheet-title">Wo sollen deine Zeiten gespeichert werden?</h2>
+    <button class="btn primary block big" data-s="od" ${cid ? '' : 'disabled'}>Mit OneDrive verbinden</button>
+    <p class="muted small">Automatischer Abgleich zwischen all deinen Geräten. ${cid ? '' : '<b>Noch nicht eingerichtet</b> – die App-Registrierung fehlt noch; du kannst OneDrive später unter „Mehr“ verbinden.'}</p>
+    <button class="btn block" data-s="local">Nur auf diesem Gerät</button>
+    <p class="muted small">Die Daten bleiben in diesem Browser. Sicherungen kannst du jederzeit als Datei ablegen, z. B. in iCloud Drive.</p>`, (b) => {
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      S.welcomed = true; persist(); closeSheet();
+      if (a.dataset.s === 'od') msConnect();
+    };
+  });
+}
+
 /* ---------- Toast ---------- */
 let toastTimer;
 function toast(msg, undo) {
@@ -1490,8 +1812,17 @@ function toast(msg, undo) {
 
 /* ---------- Start ---------- */
 render();
-autoFill();
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (ui.tab === 'heute') render(); autoFill(); } });
+(async () => {
+  const wasRedirect = await handleAuthRedirect().catch(() => false);
+  if (!wasRedirect && !S.welcomed && !connected()) {
+    if (S.entries.length || S.slots.length) { S.welcomed = true; persist(); } else welcomeSheet();
+  }
+  await Sync.now();
+  autoFill();
+})();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (ui.tab === 'heute') render(); Sync.now().then(autoFill); } });
+window.addEventListener('online', () => Sync.now());
+setInterval(() => { if (!document.hidden) Sync.now(); }, 120000);
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { /* egal */ }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in eingebetteten Vorschauen nicht erlaubt */ });
