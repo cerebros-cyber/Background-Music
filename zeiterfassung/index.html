@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zeiterfassung für Lehrkräfte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Arbeitszeit für Lehrkräfte auf dem Handy erfassen – mit Timer, Stundenplan, Ferien und Auswertung.">
+<meta name="theme-color" content="#1d6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Zeiterfassung">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
+<style>
+/* Layout: eine Spalte wie ein Klassenbuch-Tag, Navigation unten in Daumenreichweite, Timer als Hauptobjekt. */
+:root {
+  --bg: #eef2ef;
+  --surface: #ffffff;
+  --surface-2: #e3eae5;
+  --line: #d3ddd6;
+  --fg: #13201a;
+  --fg-2: #46564d;
+  --fg-3: #6f7f76;
+  --accent: #1d6b52;          /* Tafelgrün */
+  --accent-strong: #145440;
+  --accent-fg: #ffffff;
+  --accent-soft: #d6ebe1;
+  --chalk: #f5f7f2;           /* Kreide auf der Tafel */
+  --danger: #b3261e;
+  --danger-soft: #f8dedb;
+  --warn: #8a5a00;
+  --warn-soft: #fbedc9;
+  --shadow: 0 1px 2px rgba(19, 32, 26, .06), 0 8px 24px rgba(19, 32, 26, .08);
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r: 14px;
+  --r-s: 10px;
+  --nav-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1411; --surface: #152019; --surface-2: #1d2a23; --line: #2a3a32;
+    --fg: #e4ede7; --fg-2: #a7b7ad; --fg-3: #7d8d84;
+    --accent: #5bbd96; --accent-strong: #7fd0ae; --accent-fg: #062016; --accent-soft: #1a3a2d;
+    --chalk: #e9f1ec; --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1411; --surface: #152019; --surface-2: #1d2a23; --line: #2a3a32;
+  --fg: #e4ede7; --fg-2: #a7b7ad; --fg-3: #7d8d84;
+  --accent: #5bbd96; --accent-strong: #7fd0ae; --accent-fg: #062016; --accent-soft: #1a3a2d;
+  --chalk: #e9f1ec; --danger: #f08a80; --danger-soft: #3d1f1c; --warn: #f0c062; --warn-soft: #3a2d10;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.45 var(--f-body);
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: 1.9rem; font-weight: 750; line-height: 1.1; }
+h2 { font-size: 1.15rem; font-weight: 700; }
+h3 { font-size: 1rem; font-weight: 700; }
+p { margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+.app {
+  max-width: 600px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom, 0px));
+  display: grid; gap: 18px;
+}
+.eyebrow { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-3); font-weight: 700; }
+.muted { color: var(--fg-3); }
+.small { font-size: .88rem; }
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.top > div { min-width: 0; display: grid; gap: 2px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; }
+.section { display: grid; gap: 10px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.stack { display: grid; gap: 8px; }
+
+/* Pills & Chips */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 700; background: var(--surface-2); color: var(--fg-2); white-space: nowrap; }
+.pill.ok { background: var(--accent-soft); color: var(--accent-strong); }
+.pill.free { background: var(--warn-soft); color: var(--warn); }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 7px 14px 7px 11px;
+  border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg);
+  font-weight: 700; font-size: .92rem; text-align: left; line-height: 1.2;
+}
+.chip[aria-pressed="true"] { border-color: var(--fg); background: var(--fg); color: var(--bg); }
+.chip[aria-pressed="true"] .dot { box-shadow: 0 0 0 2px var(--bg); }
+.chip.add { border-style: dashed; color: var(--fg-2); padding-left: 14px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 10px 18px; border-radius: 12px; border: 1.5px solid var(--line);
+  background: var(--surface); color: var(--fg); font-weight: 700;
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.danger { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--fg-2); }
+.btn.block { width: 100%; }
+.btn.big { min-height: 58px; font-size: 1.12rem; font-family: var(--f-display); border-radius: 16px; }
+.btn.sm { min-height: 36px; padding: 6px 12px; font-size: .9rem; border-radius: 10px; }
+.iconbtn { width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); }
+.btn svg, .iconbtn svg { width: 20px; height: 20px; flex: none; }
+.linkbtn { background: none; border: 0; padding: 4px 0; color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Formulare */
+label.f { display: grid; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--fg-2); min-width: 0; }
+input[type=text], input[type=date], input[type=time], input[type=number], select, textarea {
+  width: 100%; min-height: 46px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line);
+  background: var(--surface); font-size: 1rem; font-weight: 400; color: var(--fg);
+}
+input[type=time], input[type=date] { font-variant-numeric: tabular-nums; }
+textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+/* Zeitfeld mit Schritt-Tasten */
+.tf { display: grid; gap: 6px; }
+.tf-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tf-label { font-size: .85rem; font-weight: 700; }
+.tf-row { display: grid; grid-template-columns: auto auto 1fr auto; gap: 6px; align-items: stretch; }
+.tf-row input { text-align: center; font-size: 1.35rem; font-family: var(--f-display); font-weight: 700; min-height: 52px; padding: 6px; }
+.step { min-width: 48px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: .9rem; padding: 0 8px; }
+
+/* Timer */
+.timer { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 16px; box-shadow: var(--shadow); }
+.timer.running { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.timer.running .eyebrow, .timer.running .muted { color: var(--accent-fg); opacity: .8; }
+.timer.running input, .timer.running .step { background: color-mix(in srgb, var(--accent-fg) 14%, var(--accent)); border-color: color-mix(in srgb, var(--accent-fg) 30%, var(--accent)); color: var(--accent-fg); }
+.timer.running .chip { background: transparent; border-color: color-mix(in srgb, var(--accent-fg) 35%, var(--accent)); color: var(--accent-fg); }
+.timer.running .chip[aria-pressed="true"] { background: var(--accent-fg); color: var(--accent); border-color: var(--accent-fg); }
+.timer.running .chip[aria-pressed="true"] .dot { box-shadow: none; }
+.timer.running .linkbtn { color: var(--accent-fg); }
+.timer.running .btn.primary { background: var(--accent-fg); color: var(--accent); border-color: var(--accent-fg); }
+.timer.running .btn.ghost { color: var(--accent-fg); }
+.elapsed { font-family: var(--f-display); font-weight: 800; font-size: clamp(3rem, 16vw, 4.4rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.since { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.since input { width: 9em; min-height: 40px; font-weight: 700; }
+
+/* Listen */
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); text-align: left; }
+.item:first-child { border-top: 0; }
+.item .time { font-variant-numeric: tabular-nums; font-weight: 700; font-size: .95rem; white-space: nowrap; }
+.item .meta { min-width: 0; display: grid; gap: 2px; }
+.item .meta .lbl { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: .92rem; min-width: 0; }
+.item .meta .lbl span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .meta .note { font-size: .85rem; color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .dur { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--fg-2); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.item .dur svg { width: 15px; height: 15px; color: var(--fg-3); }
+.empty { padding: 18px 14px; color: var(--fg-3); font-size: .92rem; }
+
+.day { display: grid; gap: 8px; }
+.day-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.day-head h3 { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.day.today .day-head h3 > span:first-child { color: var(--accent); }
+
+.weeknav { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; align-items: center; }
+.weeknav .mid { text-align: center; display: grid; gap: 0; }
+.weeknav .mid b { font-family: var(--f-display); font-size: 1.1rem; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 2px; }
+.stat b { font-family: var(--f-display); font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
+
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: none; border-radius: 9px; min-height: 38px; font-weight: 700; color: var(--fg-2); padding: 0 6px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.banner { border-radius: var(--r); padding: 12px 14px; background: var(--warn-soft); color: var(--warn); font-size: .92rem; display: grid; gap: 6px; }
+.banner.info { background: var(--accent-soft); color: var(--accent-strong); }
+
+/* Onboarding */
+.steps { counter-reset: s; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong); font-weight: 800; display: grid; place-items: center; font-family: var(--f-display); }
+.steps li.done::before { content: "✓"; background: var(--accent); color: var(--accent-fg); }
+
+/* Auswertung */
+.total { display: grid; gap: 4px; }
+.total .big { font-family: var(--f-display); font-weight: 800; font-size: clamp(2.6rem, 13vw, 3.6rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.chart { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 0 8px; }
+.ch-y { position: relative; width: 2.4em; font-size: .72rem; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.ch-y span { position: absolute; right: 0; transform: translateY(50%); }
+.ch-plot { position: relative; height: 180px; border-bottom: 1px solid var(--fg-3); }
+.ch-grid { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); }
+.ch-bars { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 2px; }
+.ch-bar { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0; position: relative; cursor: pointer; background: none; border: 0; padding: 0; }
+.ch-bar .stk { display: flex; flex-direction: column-reverse; gap: 2px; border-radius: 4px 4px 0 0; overflow: hidden; max-width: 34px; width: 100%; margin: 0 auto; }
+.ch-bar .stk i { display: block; min-height: 2px; }
+.ch-bar:hover .stk, .ch-bar.on .stk { filter: brightness(1.08); outline: 2px solid var(--fg); outline-offset: 1px; }
+.ch-x { grid-column: 2; display: flex; gap: 2px; font-size: .7rem; color: var(--fg-3); padding-top: 4px; }
+.ch-x span { flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap; overflow: visible; }
+.ch-tip { position: absolute; top: 0; transform: translateY(calc(-100% - 6px)); z-index: 3; background: var(--fg); color: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: .82rem; min-width: 150px; max-width: 230px; pointer-events: none; box-shadow: var(--shadow); display: grid; gap: 2px; }
+.ch-tip .r { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+.ch-tip .r span:first-child { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.brk { display: grid; gap: 12px; }
+.brk-row { display: grid; gap: 6px; }
+.brk-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.brk-top .n { display: flex; align-items: center; gap: 8px; font-weight: 700; min-width: 0; }
+.brk-top .v { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.brk-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.brk-bar i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+
+/* Stundenplan */
+.slot { display: grid; grid-template-columns: 84px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); text-align: left; }
+.slot:first-child { border-top: 0; }
+.slot .per { font-family: var(--f-display); font-weight: 800; font-size: .98rem; line-height: 1.1; }
+.slot .per small { display: block; font-family: var(--f-body); font-weight: 400; font-size: .75rem; color: var(--fg-3); }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.switch input { appearance: none; width: 52px; height: 32px; border-radius: 999px; background: var(--surface-2); border: 1.5px solid var(--line); position: relative; flex: none; transition: background .15s; }
+.switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 23px; height: 23px; border-radius: 50%; background: var(--fg-3); transition: transform .15s; }
+.switch input:checked { background: var(--accent); border-color: var(--accent); }
+.switch input:checked::after { transform: translateX(20px); background: var(--accent-fg); }
+
+/* Einstellungen */
+.set-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); }
+.set-row:first-child { border-top: 0; }
+.set-row .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-row.hidden-label .name { color: var(--fg-3); text-decoration: line-through; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--fg); }
+details.card summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+details.card summary::after { content: "▾"; color: var(--fg-3); }
+details[open].card summary::after { content: "▴"; }
+.hol { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: .9rem; }
+.hol span:nth-child(even) { font-variant-numeric: tabular-nums; color: var(--fg-2); text-align: right; }
+
+/* Navigation */
+.nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.nav-in { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); height: var(--nav-h); }
+.nav button { border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 3px; font-size: .72rem; font-weight: 700; color: var(--fg-3); padding: 0; position: relative; }
+.nav button svg { width: 24px; height: 24px; }
+.nav button[aria-current="page"] { color: var(--accent); }
+.nav button .live { position: absolute; top: 9px; left: calc(50% + 8px); width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--surface); }
+
+/* Sheet */
+.sheet-wrap { position: fixed; inset: 0; z-index: 40; display: grid; align-items: end; justify-items: center; }
+.sheet-backdrop { position: absolute; inset: 0; background: rgba(8, 14, 11, .45); }
+.sheet {
+  position: relative; width: 100%; max-width: 600px; max-height: 92%; overflow: auto; overscroll-behavior: contain;
+  background: var(--bg); border-radius: 20px 20px 0 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: grid; gap: 14px; animation: up .22s ease-out;
+}
+.sheet-grab { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 2px; }
+.sheet-body { display: grid; gap: 14px; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@keyframes up { from { transform: translateY(30px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 60;
+  bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100% - 32px));
+  background: var(--fg); color: var(--bg); border-radius: 14px; padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow);
+  font-weight: 700; font-size: .95rem;
+}
+.toast button { background: none; border: 0; color: var(--bg); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; padding: 6px; white-space: nowrap; }
+
+@media (max-width: 380px) {
+  .grid3 { grid-template-columns: 1fr 1fr; }
+  .step { min-width: 42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<main class="app" id="view" aria-live="polite"></main>
+
+<nav class="nav" aria-label="Hauptnavigation"><div class="nav-in" id="nav"></div></nav>
+
+<div class="sheet-wrap" id="sheet" hidden>
+  <div class="sheet-backdrop" data-a="closeSheet"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-grab"></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+'use strict';
+/* ============================================================
+   Zeiterfassung für Lehrkräfte – alle Daten bleiben im Browser
+   (localStorage). Ferien kommen von openholidaysapi.org,
+   Feiertage werden lokal berechnet.
+   ============================================================ */
+
+const STORE_KEY = 'lehrkraft-zeiterfassung-v1';
+
+const PRESET_LABELS = [
+  { id: 'unterricht',   name: 'Unterricht',                         color: '#2a78d6' },
+  { id: 'vertretung',   name: 'Vertretung',                         color: '#eb6834' },
+  { id: 'vorbereitung', name: 'Unterrichtsvor- und Nachbereitung',  color: '#1baf7a' },
+  { id: 'korrekturen',  name: 'Korrekturen',                        color: '#eda100' },
+  { id: 'exkursionen',  name: 'Exkursionen',                        color: '#e87ba4' },
+];
+const LABEL_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948', '#5d6f7d', '#9a6a3a', '#0f8fa3', '#b04fc0'];
+
+const STATES = {
+  BW: 'Baden-Württemberg', BY: 'Bayern', BE: 'Berlin', BB: 'Brandenburg', HB: 'Bremen', HH: 'Hamburg',
+  HE: 'Hessen', MV: 'Mecklenburg-Vorpommern', NI: 'Niedersachsen', NW: 'Nordrhein-Westfalen',
+  RP: 'Rheinland-Pfalz', SL: 'Saarland', SN: 'Sachsen', ST: 'Sachsen-Anhalt', SH: 'Schleswig-Holstein', TH: 'Thüringen',
+};
+
+const DEFAULT_PERIODS = [
+  ['08:00', '08:45'], ['08:45', '09:30'], ['09:50', '10:35'], ['10:35', '11:20'], ['11:40', '12:25'],
+  ['12:25', '13:10'], ['13:30', '14:15'], ['14:15', '15:00'], ['15:05', '15:50'], ['15:50', '16:35'],
+].map(([start, end]) => ({ start, end }));
+
+const WD_SHORT = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const WD_LONG = ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+/* ---------- Hilfsfunktionen ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const pad = (n) => String(n).padStart(2, '0');
+const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const pd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return iso(d); };
+const today = () => iso(new Date());
+const wd = (s) => pd(s).getDay() || 7;
+const monday = (s) => addDays(s, 1 - wd(s));
+const hm = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const fromMin = (m) => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; };
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const dur = (e) => { let d = toMin(e.end) - toMin(e.start); if (d < 0) d += 1440; return d; };
+const fmtDur = (min) => `${Math.floor(min / 60)}:${pad(Math.round(min % 60))} h`;
+const fmtDec = (min, digits = 2) => (min / 60).toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: digits });
+const fmtDate = (s) => { const d = pd(s); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`; };
+const fmtDateShort = (s) => { const d = pd(s); return `${d.getDate()}.${d.getMonth() + 1}.`; };
+const fmtDateLong = (s) => { const d = pd(s); return `${d.getDate()}. ${MONTHS[d.getMonth()]}`; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const roundDown5 = (m) => Math.floor(m / 5) * 5;
+function isoWeek(s) {
+  const d = pd(s); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const y0 = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - y0) / 864e5 + 1) / 7);
+}
+function daysBetween(a, b) { return Math.round((pd(b) - pd(a)) / 864e5); }
+
+const ICON = {
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>',
+  plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h3M8 17h3M14 13h2"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="aus Stundenplan"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+};
+
+/* ---------- Speicher ---------- */
+function defaults() {
+  return {
+    v: 1,
+    labels: PRESET_LABELS.map((l) => ({ ...l, preset: true, hidden: false })),
+    entries: [],
+    running: null,
+    lastLabel: 'unterricht',
+    slots: [],
+    periods: DEFAULT_PERIODS.map((p) => ({ ...p })),
+    plan: { auto: false, from: '' },
+    planSkip: [],
+    state: '',
+    holidays: {},      // { "2026": { at, list: [{from,to,name}] } } für S.state
+    freeDays: [],      // eigene freie Tage [{id, from, to, name}]
+    onboarded: false,
+  };
+}
+let S;
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return migrate(JSON.parse(raw));
+  } catch (e) { /* ignorieren */ }
+  return defaults();
+}
+function migrate(d) {
+  const base = defaults();
+  const out = { ...base, ...d };
+  out.plan = { ...base.plan, ...(d.plan || {}) };
+  for (const p of PRESET_LABELS) if (!out.labels.some((l) => l.id === p.id)) out.labels.push({ ...p, preset: true, hidden: false });
+  return out;
+}
+let storageOk = true;
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageOk = true; }
+  catch (e) { storageOk = false; }
+}
+S = load();
+
+/* ---------- Labels ---------- */
+const labelById = (id) => S.labels.find((l) => l.id === id) || { id, name: 'Unbekannt', color: '#8a8a8a' };
+const visibleLabels = () => S.labels.filter((l) => !l.hidden);
+function labelChips(selected, attr = 'data-a="pickLabel"', withAdd = true) {
+  return `<div class="chips" role="group" aria-label="Label">${visibleLabels().map((l) => `
+    <button type="button" class="chip" ${attr} data-id="${esc(l.id)}" aria-pressed="${l.id === selected}">
+      <span class="dot" style="background:${esc(l.color)}"></span><span>${esc(l.name)}</span></button>`).join('')}
+    ${withAdd ? `<button type="button" class="chip add" data-a="newLabel">${'+ Label'}</button>` : ''}</div>`;
+}
+
+/* ---------- Feiertage (lokal berechnet) ---------- */
+function easter(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+    g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return iso(new Date(y, month - 1, day));
+}
+const _feiertageCache = {};
+function feiertage(y, st) {
+  const key = y + st;
+  if (_feiertageCache[key]) return _feiertageCache[key];
+  const E = easter(y), out = {};
+  const add = (date, name, states) => { if (!states || states.includes(st)) out[date] = name; };
+  add(`${y}-01-01`, 'Neujahr');
+  add(`${y}-01-06`, 'Heilige Drei Könige', ['BW', 'BY', 'ST']);
+  add(`${y}-03-08`, 'Internationaler Frauentag', ['BE', 'MV']);
+  add(addDays(E, -2), 'Karfreitag');
+  add(addDays(E, 1), 'Ostermontag');
+  add(`${y}-05-01`, 'Tag der Arbeit');
+  add(addDays(E, 39), 'Christi Himmelfahrt');
+  add(addDays(E, 50), 'Pfingstmontag');
+  add(addDays(E, 60), 'Fronleichnam', ['BW', 'BY', 'HE', 'NW', 'RP', 'SL']);
+  add(`${y}-08-15`, 'Mariä Himmelfahrt', ['SL']);
+  add(`${y}-09-20`, 'Weltkindertag', ['TH']);
+  add(`${y}-10-03`, 'Tag der Deutschen Einheit');
+  add(`${y}-10-31`, 'Reformationstag', ['BB', 'HB', 'HH', 'MV', 'NI', 'SN', 'ST', 'SH', 'TH']);
+  add(`${y}-11-01`, 'Allerheiligen', ['BW', 'BY', 'NW', 'RP', 'SL']);
+  let bb = `${y}-11-22`; while (wd(bb) !== 3) bb = addDays(bb, -1);
+  add(bb, 'Buß- und Bettag', ['SN']);
+  add(`${y}-12-25`, '1. Weihnachtstag');
+  add(`${y}-12-26`, '2. Weihnachtstag');
+  return (_feiertageCache[key] = out);
+}
+
+/* ---------- Ferien (openholidaysapi.org) ---------- */
+async function fetchHolidayYear(y) {
+  const url = `https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&languageIsoCode=DE&subdivisionCode=DE-${S.state}&validFrom=${y}-01-01&validTo=${y}-12-31`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 9000);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal, headers: { accept: 'application/json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const list = data
+      .filter((h) => h.nationwide || !h.subdivisions || h.subdivisions.some((s) => s.code === `DE-${S.state}` || s.code.startsWith(`DE-${S.state}-`)))
+      .map((h) => ({ from: h.startDate, to: h.endDate, name: (h.name.find((n) => n.language === 'DE') || h.name[0] || {}).text || 'Ferien' }));
+    return list;
+  } finally { clearTimeout(t); }
+}
+let holidayLoading = null;
+async function ensureHolidays(years, force = false) {
+  if (!S.state) return { ok: false, reason: 'state' };
+  const need = [...new Set(years)].filter((y) => force || !S.holidays[y]);
+  if (!need.length) return { ok: true };
+  const failed = [];
+  for (const y of need) {
+    try { S.holidays[y] = { at: Date.now(), list: await fetchHolidayYear(y) }; }
+    catch (e) { failed.push(y); }
+  }
+  save();
+  return failed.length ? { ok: false, reason: 'net', failed } : { ok: true };
+}
+function yearsBetween(a, b) { const out = []; for (let y = +a.slice(0, 4); y <= +b.slice(0, 4); y++) out.push(String(y)); return out; }
+function missingHolidayYears(from, to) { return S.state ? yearsBetween(from, to).filter((y) => !S.holidays[y]) : yearsBetween(from, to); }
+
+/** Grund, warum an einem Tag kein Unterricht ist (oder null). */
+function freeReason(date) {
+  for (const f of S.freeDays) if (date >= f.from && date <= f.to) return f.name || 'Freier Tag';
+  const ft = feiertage(+date.slice(0, 4), S.state || '')[date];
+  if (ft) return ft;
+  if (S.state) {
+    for (const y of Object.keys(S.holidays)) for (const h of S.holidays[y].list) if (date >= h.from && date <= h.to) return h.name;
+  }
+  return null;
+}
+
+/* ---------- Stundenplan → Einträge ---------- */
+function slotValidOn(slot, date, forAuto) {
+  if (slot.wd !== wd(date)) return false;
+  if (slot.validFrom && date < slot.validFrom) return false;
+  if (slot.validTo && date > slot.validTo) return false;
+  if (forAuto && slot.autoFrom && date < slot.autoFrom) return false;
+  return true;
+}
+function generatePlan(from, to, forAuto = false) {
+  const existing = new Set(S.entries.filter((e) => e.planKey).map((e) => e.planKey));
+  const skip = new Set(S.planSkip);
+  const created = []; const freeDates = new Set();
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    const slots = S.slots.filter((s) => slotValidOn(s, d, forAuto));
+    if (!slots.length) continue;
+    const reason = freeReason(d);
+    if (reason) { freeDates.add(d); continue; }
+    for (const s of slots) {
+      const key = `${s.id}|${d}`;
+      if (existing.has(key) || skip.has(key)) continue;
+      const e = { id: uid(), date: d, start: s.start, end: s.end, labelId: s.labelId, note: s.title || '', source: 'plan', planKey: key };
+      S.entries.push(e); created.push(e.id); existing.add(key);
+    }
+  }
+  return { created, freeDays: freeDates.size };
+}
+let autoRunning = false;
+let autoStatus = '';   // Hinweistext, falls die automatische Eintragung pausiert
+async function autoFill() {
+  if (autoRunning || !S.plan.auto || !S.plan.from || !S.slots.length) { autoStatus = ''; return; }
+  autoRunning = true;
+  try {
+    const to = today();
+    if (S.plan.from > to) { autoStatus = ''; return; }
+    if (!S.state) { autoStatus = 'Wähle unter „Mehr“ dein Bundesland, damit Ferien beim automatischen Eintragen übersprungen werden.'; return; }
+    const r = await ensureHolidays(yearsBetween(S.plan.from, to));
+    if (!r.ok) { autoStatus = `Ferien für ${r.failed.join(', ')} konnten nicht geladen werden (keine Verbindung?). Die automatische Eintragung wartet, bis das klappt. Du kannst Ferien unter „Mehr“ auch selbst eintragen.`; return; }
+    autoStatus = '';
+    const res = generatePlan(S.plan.from, to, true);
+    if (res.created.length) {
+      save();
+      toast(`${res.created.length} ${res.created.length === 1 ? 'Stunde' : 'Stunden'} aus dem Stundenplan eingetragen`, () => undoCreate(res.created));
+    }
+  } finally { autoRunning = false; render(); }
+}
+function undoCreate(ids) {
+  const set = new Set(ids);
+  S.entries = S.entries.filter((e) => !set.has(e.id));
+  save(); render();
+}
+
+/* ---------- UI-Zustand ---------- */
+const ui = {
+  tab: 'heute',
+  startDirty: false, endDirty: false, startVal: '', endVal: '',
+  timerLabel: S.lastLabel || 'unterricht',
+  weekOff: 0,
+  planDay: Math.min(Math.max(wd(today()), 1), 5),
+  rep: { mode: 'week', off: 0, from: '', to: '', labels: null, sel: -1 },
+};
+try { const t = localStorage.getItem(STORE_KEY + '-tab'); if (t) ui.tab = t; } catch (e) { /* egal */ }
+if (location.hash && ['heute', 'eintraege', 'plan', 'auswertung', 'mehr'].includes(location.hash.slice(1))) ui.tab = location.hash.slice(1);
+
+/* ---------- Rendering ---------- */
+const TABS = [
+  ['heute', 'Heute', ICON.today], ['eintraege', 'Einträge', ICON.list], ['plan', 'Stundenplan', ICON.plan],
+  ['auswertung', 'Auswertung', ICON.chart], ['mehr', 'Mehr', ICON.more],
+];
+function renderNav() {
+  $('#nav').innerHTML = TABS.map(([id, name, icon]) => `
+    <button type="button" data-a="tab" data-id="${id}" ${ui.tab === id ? 'aria-current="page"' : ''}>
+      ${icon}<span>${name}</span>${id === 'heute' && S.running ? '<i class="live" aria-label="Timer läuft"></i>' : ''}</button>`).join('');
+}
+function render() {
+  renderNav();
+  const v = $('#view');
+  const fn = { heute: viewHeute, eintraege: viewEintraege, plan: viewPlan, auswertung: viewAuswertung, mehr: viewMehr }[ui.tab] || viewHeute;
+  v.innerHTML = fn();
+  if (ui.tab === 'heute') tick();
+  if (ui.tab === 'auswertung') bindChart();
+}
+
+function entryRow(e, showDate = false) {
+  const l = labelById(e.labelId);
+  return `<button type="button" class="item" data-a="editEntry" data-id="${e.id}">
+    <span class="time">${showDate ? fmtDateShort(e.date) + ' ' : ''}${e.start}–${e.end}</span>
+    <span class="meta"><span class="lbl"><span class="dot" style="background:${esc(l.color)}"></span><span>${esc(l.name)}</span></span>
+      ${e.note ? `<span class="note">${esc(e.note)}</span>` : ''}</span>
+    <span class="dur">${e.source === 'plan' ? ICON.cal : ''}${fmtDur(dur(e))}</span></button>`;
+}
+const entriesOn = (d) => S.entries.filter((e) => e.date === d).sort((a, b) => a.start.localeCompare(b.start));
+const sumMin = (list) => list.reduce((a, e) => a + dur(e), 0);
+
+function dayStatus(d) {
+  const r = freeReason(d);
+  if (r) return `<span class="pill free">${esc(r)}</span>`;
+  if (wd(d) >= 6) return `<span class="pill">Wochenende</span>`;
+  return `<span class="pill ok">Schultag</span>`;
+}
+
+/* ----- Heute ----- */
+function viewHeute() {
+  const t = today();
+  const run = S.running;
+  const todays = entriesOn(t);
+  const mon = monday(t);
+  const week = S.entries.filter((e) => e.date >= mon && e.date <= addDays(mon, 6));
+  let timer;
+  if (!run) {
+    timer = `<section class="timer" aria-label="Timer">
+      <div class="section-head"><p class="eyebrow">Neue Zeit erfassen</p></div>
+      ${labelChips(ui.timerLabel, 'data-a="timerLabel"')}
+      ${timeField('start', 'Beginn', ui.startDirty)}
+      <label class="f" for="t-note"><span>Notiz <span class="muted">(optional)</span></span>
+        <input type="text" id="t-note" placeholder="z. B. Klassenarbeit 8b" autocomplete="off"></label>
+      <button type="button" class="btn primary big block" data-a="startTimer" id="t-startbtn">${ICON.play}<span>Jetzt starten</span></button>
+    </section>`;
+  } else {
+    const l = labelById(run.labelId);
+    const [sd, st] = run.start.split('T');
+    timer = `<section class="timer running" aria-label="Laufender Timer">
+      <div class="section-head"><p class="eyebrow">Läuft · ${esc(l.name)}</p></div>
+      <div class="elapsed" id="t-elapsed">0:00:00</div>
+      <div class="since"><label for="t-runstart" class="muted">Begonnen ${sd !== t ? 'am ' + fmtDateShort(sd) + ' ' : ''}um</label>
+        <input type="time" id="t-runstart" value="${st}"></div>
+      ${labelChips(run.labelId, 'data-a="runLabel"', false)}
+      ${run.note ? `<p class="muted small">Notiz: ${esc(run.note)}</p>` : ''}
+      ${timeField('end', 'Ende', ui.endDirty)}
+      <button type="button" class="btn primary big block" data-a="stopTimer" id="t-stopbtn">${ICON.stop}<span>Jetzt beenden</span></button>
+      <button type="button" class="btn ghost sm" data-a="discardTimer">Timer verwerfen</button>
+    </section>`;
+  }
+  const onboarding = (!S.onboarded && !S.entries.length) ? `
+    <section class="card">
+      <div class="section-head"><h2>Einrichten in drei Schritten</h2><button class="linkbtn" data-a="dismissOnboarding">Ausblenden</button></div>
+      <ol class="steps">
+        <li class="${S.state ? 'done' : ''}"><div><b>Bundesland wählen</b><br><span class="muted small">Damit Ferien und Feiertage übersprungen werden.</span><br><button class="linkbtn" data-a="tab" data-id="mehr">Zu den Einstellungen</button></div></li>
+        <li class="${S.slots.length ? 'done' : ''}"><div><b>Stundenplan anlegen</b><br><span class="muted small">Deine festen Stunden werden dann automatisch eingetragen.</span><br><button class="linkbtn" data-a="tab" data-id="plan">Zum Stundenplan</button></div></li>
+        <li><div><b>Zeit erfassen</b><br><span class="muted small">Label antippen, „Jetzt starten“ – oder den Beginn mit −15 / −5 vorstellen.</span></div></li>
+      </ol>
+    </section>` : '';
+  return `
+    <header class="top">
+      <div><p class="eyebrow">KW ${isoWeek(t)} · ${WD_LONG[wd(t)]}</p><h1>${fmtDateLong(t)}</h1></div>
+      ${dayStatus(t)}
+    </header>
+    ${!storageOk ? '<div class="banner">Dieser Browser erlaubt kein dauerhaftes Speichern. Einträge gehen beim Schließen verloren – exportiere sie unter „Mehr“.</div>' : ''}
+    ${timer}
+    <button type="button" class="btn block" data-a="newEntry" data-date="${t}">${ICON.plus}<span>Zeit nachtragen</span></button>
+    ${onboarding}
+    <section class="section">
+      <div class="section-head"><h2>Heute</h2><span class="num muted">${fmtDur(sumMin(todays))}</span></div>
+      <div class="list">${todays.length ? todays.map((e) => entryRow(e)).join('') : '<p class="empty">Noch nichts erfasst.</p>'}</div>
+    </section>
+    <section class="stats">
+      <div class="stat"><span class="eyebrow">Diese Woche</span><b>${fmtDur(sumMin(week))}</b><span class="muted small">${week.length} Einträge</span></div>
+      <div class="stat"><span class="eyebrow">Davon Unterricht</span><b>${fmtDur(sumMin(week.filter((e) => e.labelId === 'unterricht' || e.labelId === 'vertretung')))}</b><span class="muted small">inkl. Vertretung</span></div>
+    </section>`;
+}
+function timeField(which, label, dirty) {
+  return `<div class="tf">
+    <div class="tf-head"><label class="tf-label" for="t-${which}">${label}</label>
+      <button type="button" class="linkbtn small" data-a="tfNow" data-f="${which}" ${dirty ? '' : 'hidden'} id="t-${which}-now">Auf jetzt setzen</button>
+      <span class="muted small" id="t-${which}-hint" ${dirty ? 'hidden' : ''}>folgt der Uhr</span></div>
+    <div class="tf-row">
+      <button type="button" class="step" data-a="tfStep" data-f="${which}" data-d="-15" aria-label="15 Minuten früher">−15</button>
+      <button type="button" class="step" data-a="tfStep" data-f="${which}" data-d="-5" aria-label="5 Minuten früher">−5</button>
+      <input type="time" id="t-${which}" data-tf="${which}" value="${dirty ? esc(ui[which + 'Val']) : ''}">
+      <button type="button" class="step" data-a="tfStep" data-f="${which}" data-d="5" aria-label="5 Minuten später">+5</button>
+    </div></div>`;
+}
+function tick() {
+  if (ui.tab !== 'heute') return;
+  const now = hm(new Date());
+  for (const f of ['start', 'end']) {
+    const inp = $('#t-' + f);
+    if (inp && !ui[f + 'Dirty'] && document.activeElement !== inp) inp.value = now;
+  }
+  const sb = $('#t-startbtn span');
+  if (sb) sb.textContent = ui.startDirty ? `Um ${$('#t-start').value || now} starten` : 'Jetzt starten';
+  const eb = $('#t-stopbtn span');
+  if (eb) eb.textContent = ui.endDirty ? `Um ${$('#t-end').value || now} beenden` : 'Jetzt beenden';
+  const el = $('#t-elapsed');
+  if (el && S.running) {
+    const start = new Date(S.running.start);
+    let s = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
+    el.textContent = `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+    document.title = `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)} · ${labelById(S.running.labelId).name}`;
+  } else document.title = 'Zeiterfassung für Lehrkräfte';
+}
+setInterval(tick, 1000);
+
+/* ----- Einträge ----- */
+function viewEintraege() {
+  const mon = addDays(monday(today()), ui.weekOff * 7);
+  const sun = addDays(mon, 6);
+  const week = S.entries.filter((e) => e.date >= mon && e.date <= sun);
+  let days = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(mon, i);
+    const list = entriesOn(d);
+    if (i >= 5 && !list.length) continue;
+    days += `<section class="day ${d === today() ? 'today' : ''}">
+      <div class="day-head"><h3><span>${WD_SHORT[wd(d)]} ${fmtDateShort(d)}</span>${freeReason(d) ? `<span class="pill free">${esc(freeReason(d))}</span>` : ''}</h3>
+        <div class="row"><span class="num muted small">${list.length ? fmtDur(sumMin(list)) : ''}</span>
+        <button class="iconbtn" data-a="newEntry" data-date="${d}" aria-label="Zeit am ${fmtDate(d)} eintragen">${ICON.plus}</button></div></div>
+      ${list.length ? `<div class="list">${list.map((e) => entryRow(e)).join('')}</div>` : ''}
+    </section>`;
+  }
+  return `
+    <header class="top"><div><p class="eyebrow">Einträge</p><h1>Woche</h1></div>
+      ${S.slots.length ? `<button class="btn sm" data-a="fillWeek" data-from="${mon}" data-to="${sun}">${ICON.cal} Stundenplan eintragen</button>` : ''}</header>
+    <div class="weeknav">
+      <button class="iconbtn" data-a="week" data-d="-1" aria-label="Vorige Woche">${ICON.left}</button>
+      <div class="mid"><b>KW ${isoWeek(mon)}</b><span class="muted small num">${fmtDateShort(mon)} – ${fmtDate(sun)}</span></div>
+      <button class="iconbtn" data-a="week" data-d="1" aria-label="Nächste Woche">${ICON.right}</button>
+    </div>
+    ${ui.weekOff !== 0 ? '<button class="linkbtn" data-a="week" data-d="0">Zur aktuellen Woche</button>' : ''}
+    <div class="stats">
+      <div class="stat"><span class="eyebrow">Summe</span><b>${fmtDur(sumMin(week))}</b><span class="muted small">${fmtDec(sumMin(week))} Stunden</span></div>
+      <div class="stat"><span class="eyebrow">Einträge</span><b>${week.length}</b><span class="muted small">${week.filter((e) => e.source === 'plan').length} aus dem Stundenplan</span></div>
+    </div>
+    ${days}`;
+}
+
+/* ----- Stundenplan ----- */
+function periodName(s) {
+  if (s.pFrom == null) return `<span>${s.start}</span><small>${s.end}</small>`;
+  const p = s.pFrom === s.pTo ? `${s.pFrom + 1}.` : `${s.pFrom + 1}.–${s.pTo + 1}.`;
+  return `<span>${p} Std</span><small>${s.start}–${s.end}</small>`;
+}
+function slotUStd(s) { return s.pFrom != null ? s.pTo - s.pFrom + 1 : Math.round(dur(s) / 45); }
+function viewPlan() {
+  const showSat = S.slots.some((s) => s.wd === 6);
+  const days = showSat ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+  const daySlots = S.slots.filter((s) => s.wd === ui.planDay).sort((a, b) => a.start.localeCompare(b.start));
+  const active = S.slots.filter((s) => (!s.validTo || s.validTo >= today()));
+  const totalU = active.reduce((a, s) => a + slotUStd(s), 0);
+  const totalMin = active.reduce((a, s) => a + dur(s), 0);
+  const stateInfo = S.state
+    ? `<span class="muted small">Ferien & Feiertage: <b>${STATES[S.state]}</b></span>`
+    : `<div class="banner">Noch kein Bundesland gewählt – Ferien werden nicht berücksichtigt. <button class="linkbtn" data-a="tab" data-id="mehr">Bundesland wählen</button></div>`;
+  return `
+    <header class="top"><div><p class="eyebrow">Feste Zeiten</p><h1>Stundenplan</h1></div>
+      <span class="pill num">${totalU} UStd · ${fmtDur(totalMin)}</span></header>
+    <section class="card">
+      <label class="switch" for="plan-auto"><span><b>Automatisch eintragen</b><br><span class="muted small">Jeden Tag bis heute, Ferien und Feiertage ausgenommen.</span></span>
+        <input type="checkbox" id="plan-auto" data-c="planAuto" ${S.plan.auto ? 'checked' : ''}></label>
+      ${S.plan.auto ? `<label class="f" for="plan-from">Eintragen ab
+        <input type="date" id="plan-from" data-c="planFrom" value="${esc(S.plan.from)}"></label>` : ''}
+      ${autoStatus ? `<div class="banner">${esc(autoStatus)}</div>` : ''}
+      ${stateInfo}
+      <button class="btn block" data-a="fillRange">${ICON.cal}<span>Zeitraum eintragen …</span></button>
+      <p class="muted small">Eingetragene Stunden kannst du unter „Einträge“ einzeln ändern oder löschen. Gelöschte Stunden werden nicht erneut eingetragen.</p>
+    </section>
+    <div class="seg" role="group" aria-label="Wochentag">${days.map((d) => `<button type="button" data-a="planDay" data-d="${d}" aria-pressed="${ui.planDay === d}">${WD_SHORT[d]}</button>`).join('')}</div>
+    <section class="section">
+      <div class="section-head"><h2>${WD_LONG[ui.planDay]}</h2><span class="muted num small">${daySlots.reduce((a, s) => a + slotUStd(s), 0)} UStd</span></div>
+      <div class="list">${daySlots.length ? daySlots.map((s) => {
+        const l = labelById(s.labelId);
+        const validity = (s.validFrom || s.validTo) ? `<span class="note">gültig ${s.validFrom ? 'ab ' + fmtDate(s.validFrom) : ''} ${s.validTo ? 'bis ' + fmtDate(s.validTo) : ''}</span>` : '';
+        return `<button type="button" class="slot" data-a="editSlot" data-id="${s.id}">
+          <span class="per num">${periodName(s)}</span>
+          <span class="meta" style="min-width:0;display:grid;gap:2px"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || l.name)}</b>
+            <span class="row small" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="background:${esc(l.color)}"></span><span class="muted">${esc(l.name)}</span></span>${validity}</span>
+          <span class="num muted small">${fmtDur(dur(s))}</span></button>`;
+      }).join('') : '<p class="empty">Keine festen Stunden an diesem Tag.</p>'}</div>
+      <button class="btn primary block" data-a="newSlot">${ICON.plus}<span>Stunde hinzufügen</span></button>
+    </section>`;
+}
+
+/* ----- Auswertung ----- */
+function repRange() {
+  const r = ui.rep, t = today();
+  if (r.mode === 'week') { const m = addDays(monday(t), r.off * 7); return [m, addDays(m, 6), `KW ${isoWeek(m)} · ${fmtDateShort(m)}–${fmtDate(addDays(m, 6))}`]; }
+  if (r.mode === 'month') {
+    const d = pd(t); const f = new Date(d.getFullYear(), d.getMonth() + r.off, 1); const l = new Date(f.getFullYear(), f.getMonth() + 1, 0);
+    return [iso(f), iso(l), `${MONTHS[f.getMonth()]} ${f.getFullYear()}`];
+  }
+  if (r.mode === 'year') {
+    const d = pd(t); const y = (d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1) + r.off;
+    return [`${y}-08-01`, `${y + 1}-07-31`, `Schuljahr ${y}/${String(y + 1).slice(2)}`];
+  }
+  const from = r.from || addDays(t, -30), to = r.to || t;
+  return [from <= to ? from : to, from <= to ? to : from, 'Eigener Zeitraum'];
+}
+function niceStep(maxH) {
+  for (const s of [0.5, 1, 2, 4, 5, 10, 20, 25, 50, 100]) if (maxH / s <= 4) return s;
+  return 200;
+}
+function buckets(from, to) {
+  const days = daysBetween(from, to) + 1;
+  const out = [];
+  if (days <= 35) {
+    for (let d = from; d <= to; d = addDays(d, 1)) out.push({ from: d, to: d, label: days <= 8 ? WD_SHORT[wd(d)] : String(pd(d).getDate()), title: `${WD_SHORT[wd(d)]} ${fmtDate(d)}` });
+  } else if (days <= 190) {
+    for (let m = monday(from); m <= to; m = addDays(m, 7)) out.push({ from: m < from ? from : m, to: addDays(m, 6) > to ? to : addDays(m, 6), label: String(isoWeek(m)), title: `KW ${isoWeek(m)} (${fmtDateShort(m)}–${fmtDateShort(addDays(m, 6))})` });
+  } else {
+    const f = pd(from);
+    for (let d = new Date(f.getFullYear(), f.getMonth(), 1); iso(d) <= to; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+      const a = iso(d), b = iso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+      out.push({ from: a < from ? from : a, to: b > to ? to : b, label: MONTHS[d.getMonth()].slice(0, 3), title: `${MONTHS[d.getMonth()]} ${d.getFullYear()}` });
+    }
+  }
+  return out;
+}
+let chartData = null;
+function viewAuswertung() {
+  const r = ui.rep;
+  const [from, to, title] = repRange();
+  const usedIds = new Set(S.entries.map((e) => e.labelId));
+  const allLabels = S.labels.filter((l) => !l.hidden || usedIds.has(l.id));
+  const sel = r.labels ? new Set(r.labels) : new Set(allLabels.map((l) => l.id));
+  const list = S.entries.filter((e) => e.date >= from && e.date <= to && sel.has(e.labelId));
+  const total = sumMin(list);
+  const perLabel = allLabels.filter((l) => sel.has(l.id)).map((l) => {
+    const items = list.filter((e) => e.labelId === l.id);
+    return { l, min: sumMin(items), n: items.length };
+  }).filter((p) => p.n > 0).sort((a, b) => b.min - a.min);
+  const workDays = new Set(list.map((e) => e.date)).size;
+  // Durchschnitt pro Woche nur über die bereits vergangene Zeit des Zeitraums
+  const spanDays = daysBetween(from, to < today() ? to : today()) + 1;
+  const bk = buckets(from, to).map((b) => {
+    const items = list.filter((e) => e.date >= b.from && e.date <= b.to);
+    const by = perLabel.map((p) => ({ l: p.l, min: sumMin(items.filter((e) => e.labelId === p.l.id)) })).filter((x) => x.min > 0);
+    return { ...b, total: sumMin(items), by };
+  });
+  chartData = bk;
+  const maxH = Math.max(1, ...bk.map((b) => b.total / 60));
+  const step = niceStep(maxH);
+  const top = Math.ceil(maxH / step) * step;
+  const ticks = []; for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
+  const order = perLabel.map((p) => p.l.id);
+  const ustdMin = sumMin(list.filter((e) => e.labelId === 'unterricht' || e.labelId === 'vertretung'));
+  const xEvery = Math.ceil(bk.length / 12);
+  const chart = `
+    <div class="chart" id="chart">
+      <div class="ch-y">${ticks.map((v) => `<span style="bottom:${(v / top) * 100}%">${v.toLocaleString('de-DE')}</span>`).join('')}</div>
+      <div class="ch-plot">
+        ${ticks.slice(1).map((v) => `<div class="ch-grid" style="bottom:${(v / top) * 100}%"></div>`).join('')}
+        <div class="ch-bars">${bk.map((b, i) => `
+          <button type="button" class="ch-bar ${ui.rep.sel === i ? 'on' : ''}" data-i="${i}" aria-label="${esc(b.title)}: ${fmtDur(b.total)}">
+            <span class="stk" style="height:${(b.total / 60 / top) * 100}%">${[...b.by].sort((x, y) => order.indexOf(x.l.id) - order.indexOf(y.l.id)).map((x) =>
+              `<i style="flex:${x.min} 1 0;background:${esc(x.l.color)}"></i>`).join('')}</span></button>`).join('')}</div>
+        <div class="ch-tip" id="ch-tip" hidden></div>
+      </div>
+      <div class="ch-x">${bk.map((b, i) => `<span>${i % xEvery === 0 ? esc(b.label) : ''}</span>`).join('')}</div>
+    </div>
+    <p class="muted small">Stunden pro ${bk.length && bk[0].from === bk[0].to ? 'Tag' : (daysBetween(from, to) <= 190 ? 'Kalenderwoche' : 'Monat')} · Balken antippen für Details</p>`;
+  return `
+    <header class="top"><div><p class="eyebrow">Auswertung</p><h1>${esc(title)}</h1></div></header>
+    <div class="seg" role="group" aria-label="Zeitraum">
+      ${[['week', 'Woche'], ['month', 'Monat'], ['year', 'Schuljahr'], ['custom', 'Frei']].map(([m, n]) => `<button type="button" data-a="repMode" data-m="${m}" aria-pressed="${r.mode === m}">${n}</button>`).join('')}
+    </div>
+    ${r.mode === 'custom' ? `<div class="grid2">
+        <label class="f" for="rep-from">Von<input type="date" id="rep-from" data-c="repFrom" value="${from}"></label>
+        <label class="f" for="rep-to">Bis<input type="date" id="rep-to" data-c="repTo" value="${to}"></label></div>`
+      : `<div class="weeknav"><button class="iconbtn" data-a="repStep" data-d="-1" aria-label="Zurück">${ICON.left}</button>
+        <div class="mid"><span class="muted small num">${fmtDate(from)} – ${fmtDate(to)}</span>${r.off ? '<button class="linkbtn small" data-a="repStep" data-d="0">Aktuell</button>' : ''}</div>
+        <button class="iconbtn" data-a="repStep" data-d="1" aria-label="Weiter">${ICON.right}</button></div>`}
+    <section class="section">
+      <div class="section-head"><h3>Labels</h3>
+        <div class="row"><button class="linkbtn small" data-a="repAll">Alle</button><button class="linkbtn small" data-a="repNone">Keine</button></div></div>
+      <div class="chips">${allLabels.map((l) => `<button type="button" class="chip" data-a="repLabel" data-id="${esc(l.id)}" aria-pressed="${sel.has(l.id)}"><span class="dot" style="background:${esc(l.color)}"></span><span>${esc(l.name)}</span></button>`).join('')}</div>
+    </section>
+    <section class="card">
+      <div class="total"><span class="eyebrow">Arbeitszeit im Zeitraum</span><span class="big">${fmtDur(total)}</span>
+        <span class="muted small num">${fmtDec(total)} Stunden · ${list.length} Einträge · ${workDays} Arbeitstage${workDays ? ` · Ø ${fmtDur(total / workDays)} pro Arbeitstag` : ''}${spanDays >= 7 ? ` · Ø ${fmtDur(total / (spanDays / 7))} pro Woche` : ''}</span></div>
+      ${list.length ? chart : '<p class="empty">Keine Einträge für diese Auswahl.</p>'}
+    </section>
+    ${perLabel.length ? `<section class="card">
+      <h2>Nach Label</h2>
+      <div class="brk">${perLabel.map((p) => `<div class="brk-row">
+        <div class="brk-top"><span class="n"><span class="dot" style="background:${esc(p.l.color)}"></span>${esc(p.l.name)}</span>
+          <span class="v">${fmtDur(p.min)} <span class="muted small">· ${total ? Math.round(p.min / total * 100) : 0} %</span></span></div>
+        <div class="brk-bar"><i style="width:${total ? p.min / total * 100 : 0}%;background:${esc(p.l.color)}"></i></div>
+        <span class="muted small">${p.n} ${p.n === 1 ? 'Eintrag' : 'Einträge'}${(p.l.id === 'unterricht' || p.l.id === 'vertretung') && p.min ? ` · entspricht ${fmtDec(p.min / 45 * 60, 1)} Unterrichtsstunden à 45 min` : ''}</span>
+      </div>`).join('')}</div>
+      ${ustdMin && perLabel.length > 1 ? `<p class="muted small">Unterricht und Vertretung zusammen: ${fmtDur(ustdMin)} (${fmtDec(ustdMin / 45 * 60, 1)} UStd). Alles andere: ${fmtDur(total - ustdMin)}.</p>` : ''}
+    </section>` : ''}
+    <div class="grid2">
+      <button class="btn" data-a="csv">CSV exportieren</button>
+      <button class="btn" data-a="csvCopy">CSV kopieren</button>
+    </div>`;
+}
+function bindChart() {
+  const ch = $('#chart'); if (!ch || !chartData) return;
+  const tip = $('#ch-tip');
+  const show = (btn) => {
+    const i = +btn.dataset.i, b = chartData[i];
+    ch.querySelectorAll('.ch-bar.on').forEach((x) => x.classList.remove('on'));
+    btn.classList.add('on'); ui.rep.sel = i;
+    tip.innerHTML = `<b>${esc(b.title)}</b><div class="r"><span>Gesamt</span><span class="num">${fmtDur(b.total)}</span></div>` +
+      b.by.map((x) => `<div class="r"><span><span class="dot" style="background:${esc(x.l.color)}"></span>${esc(x.l.name)}</span><span class="num">${fmtDur(x.min)}</span></div>`).join('');
+    tip.hidden = false;
+    const plot = ch.querySelector('.ch-plot').getBoundingClientRect();
+    const r = btn.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    let left = r.left - plot.left + r.width / 2 - w / 2;
+    left = Math.max(0, Math.min(left, plot.width - w));
+    tip.style.left = left + 'px';
+  };
+  ch.querySelectorAll('.ch-bar').forEach((b) => {
+    b.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') show(b); });
+    b.addEventListener('click', () => show(b));
+    b.addEventListener('focus', () => show(b));
+  });
+  ch.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { tip.hidden = true; ch.querySelectorAll('.ch-bar.on').forEach((x) => x.classList.remove('on')); ui.rep.sel = -1; } });
+}
+
+/* ----- Mehr / Einstellungen ----- */
+function viewMehr() {
+  const t = today();
+  const d = pd(t);
+  const syStart = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
+  const from = `${syStart}-08-01`, to = `${syStart + 1}-07-31`;
+  const hol = [];
+  for (const y of Object.keys(S.holidays)) for (const h of S.holidays[y].list) if (h.to >= from && h.from <= to && !hol.some((x) => x.from === h.from && x.name === h.name)) hol.push(h);
+  hol.sort((a, b) => a.from.localeCompare(b.from));
+  const fts = S.state ? [syStart, syStart + 1].flatMap((y) => Object.entries(feiertage(y, S.state))).filter(([dd]) => dd >= from && dd <= to && wd(dd) <= 5).sort() : [];
+  const missing = S.state ? missingHolidayYears(from, to) : [];
+  const usedIds = new Set(S.entries.map((e) => e.labelId).concat(S.slots.map((s) => s.labelId)));
+  return `
+    <header class="top"><div><p class="eyebrow">Einstellungen</p><h1>Mehr</h1></div></header>
+
+    <section class="card">
+      <h2>Bundesland, Ferien & Feiertage</h2>
+      <label class="f" for="set-state">Bundesland
+        <select id="set-state" data-c="state"><option value="">– bitte wählen –</option>
+          ${Object.entries(STATES).map(([k, v]) => `<option value="${k}" ${S.state === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      ${S.state ? `
+        ${missing.length ? `<div class="banner">Ferien für ${missing.join(', ')} sind noch nicht geladen. <button class="linkbtn" data-a="loadHolidays">Jetzt laden</button></div>` : ''}
+        <div class="row"><button class="btn sm" data-a="loadHolidays" data-force="1">Ferien neu laden</button>
+          <span class="muted small">Quelle: openholidaysapi.org</span></div>
+        <details class="card" style="padding:12px"><summary>Ferien Schuljahr ${syStart}/${String(syStart + 1).slice(2)} (${hol.length})</summary>
+          <div class="hol">${hol.length ? hol.map((h) => `<span>${esc(h.name)}</span><span>${fmtDateShort(h.from)}–${fmtDate(h.to)}</span>`).join('') : '<span class="muted">Noch keine Daten</span><span></span>'}</div></details>
+        <details class="card" style="padding:12px"><summary>Feiertage an Werktagen (${fts.length})</summary>
+          <div class="hol">${fts.map(([dd, n]) => `<span>${esc(n)}</span><span>${WD_SHORT[wd(dd)]} ${fmtDate(dd)}</span>`).join('')}</div></details>` : ''}
+      <h3>Eigene freie Tage</h3>
+      <p class="muted small">Für bewegliche Ferientage, Studientage oder Ferien, die online fehlen.</p>
+      <div class="list">${S.freeDays.length ? S.freeDays.slice().sort((a, b) => a.from.localeCompare(b.from)).map((f) => `
+        <div class="set-row"><span class="dot" style="background:var(--warn)"></span>
+          <span class="name">${esc(f.name)} <span class="muted small num">${fmtDateShort(f.from)}${f.to !== f.from ? '–' + fmtDate(f.to) : pd(f.from).getFullYear()}</span></span>
+          <button class="btn sm ghost" data-a="delFree" data-id="${f.id}">Entfernen</button></div>`).join('') : '<p class="empty">Keine eigenen freien Tage.</p>'}</div>
+      <button class="btn sm" data-a="newFree">${ICON.plus}<span>Freie Tage hinzufügen</span></button>
+    </section>
+
+    <section class="card">
+      <h2>Labels</h2>
+      <div class="list">${S.labels.map((l) => `
+        <div class="set-row ${l.hidden ? 'hidden-label' : ''}"><span class="dot" style="background:${esc(l.color)};width:14px;height:14px"></span>
+          <span class="name">${esc(l.name)}${l.preset ? ' <span class="muted small">· vorgegeben</span>' : ''}</span>
+          <button class="btn sm ghost" data-a="editLabel" data-id="${esc(l.id)}">Bearbeiten</button></div>`).join('')}</div>
+      <button class="btn sm" data-a="newLabel">${ICON.plus}<span>Neues Label</span></button>
+    </section>
+
+    <section class="card">
+      <h2>Stundenraster</h2>
+      <p class="muted small">Beginn und Ende der Unterrichtsstunden an deiner Schule. Wird im Stundenplan zum schnellen Eintragen genutzt.</p>
+      <div class="stack">${S.periods.map((p, i) => `
+        <div class="grid3" style="align-items:end"><span class="num" style="align-self:center"><b>${i + 1}. Stunde</b></span>
+          <input type="time" id="per-s-${i}" data-c="perStart" data-i="${i}" value="${p.start}" aria-label="${i + 1}. Stunde Beginn">
+          <input type="time" id="per-e-${i}" data-c="perEnd" data-i="${i}" value="${p.end}" aria-label="${i + 1}. Stunde Ende"></div>`).join('')}</div>
+      <div class="row"><button class="btn sm" data-a="addPeriod">${ICON.plus}<span>Stunde</span></button>
+        ${S.periods.length > 1 ? '<button class="btn sm ghost" data-a="delPeriod">Letzte entfernen</button>' : ''}</div>
+    </section>
+
+    <section class="card">
+      <h2>Datensicherung</h2>
+      <p class="muted small">Alle Daten liegen nur in diesem Browser auf diesem Gerät. Sichere sie regelmäßig als Datei – damit kannst du sie auch auf ein anderes Gerät übertragen.</p>
+      <div class="grid2">
+        <button class="btn" data-a="exportJson">Sicherung speichern</button>
+        <button class="btn" data-a="exportCopy">Sicherung kopieren</button>
+        <label class="btn" for="imp-file" style="cursor:pointer">Datei einlesen<input type="file" id="imp-file" accept="application/json,.json" data-c="importFile" hidden></label>
+        <button class="btn" data-a="importPaste">Text einfügen</button>
+      </div>
+      <p class="muted small">${S.entries.length} Einträge · ${S.slots.length} Stunden im Stundenplan · ${S.labels.length} Labels</p>
+      <button class="btn danger sm" data-a="wipe">Alle Daten löschen</button>
+    </section>
+    <p class="muted small" style="text-align:center">Zeiterfassung für Lehrkräfte · Daten bleiben auf deinem Gerät</p>`;
+}
+
+/* ---------- Sheet (Bottom-Sheet) ---------- */
+let sheetCleanup = null;
+function openSheet(html, init) {
+  const body = $('#sheet-body');
+  body.innerHTML = html;
+  $('#sheet').hidden = false;
+  document.body.style.overflow = 'hidden';
+  body.onclick = null; body.oninput = null; body.onchange = null;
+  sheetCleanup = init ? init(body) : null;
+  const first = body.querySelector('[autofocus]');
+  if (first) setTimeout(() => first.focus(), 50);
+}
+function closeSheet() {
+  $('#sheet').hidden = true;
+  document.body.style.overflow = '';
+  if (typeof sheetCleanup === 'function') sheetCleanup();
+  sheetCleanup = null;
+}
+function confirmSheet({ title, text, ok, danger = true, onOk }) {
+  openSheet(`<h2 id="sheet-title">${esc(title)}</h2><p class="muted">${esc(text)}</p>
+    <div class="sheet-actions"><button class="btn" data-s="no">Abbrechen</button><button class="btn ${danger ? 'danger' : 'primary'}" data-s="yes">${esc(ok)}</button></div>`,
+  (b) => { b.onclick = (e) => { const a = e.target.closest('[data-s]'); if (!a) return; closeSheet(); if (a.dataset.s === 'yes') onOk(); }; });
+}
+
+/* Eintrag anlegen / bearbeiten */
+function entrySheet(entry, date) {
+  const isNew = !entry;
+  const nm = roundDown5(nowMin());
+  const e = entry ? { ...entry } : {
+    date: date || today(), start: fromMin(nm - 60), end: fromMin(nm),
+    labelId: S.lastLabel || 'unterricht', note: '', source: 'manual',
+  };
+  if (!S.labels.some((l) => l.id === e.labelId && !l.hidden) && isNew) e.labelId = visibleLabels()[0]?.id;
+  const html = () => `
+    <h2 id="sheet-title">${isNew ? 'Zeit nachtragen' : 'Eintrag bearbeiten'}</h2>
+    ${e.source === 'plan' ? '<div class="banner info">Aus dem Stundenplan eingetragen. Änderungen gelten nur für diesen Tag.</div>' : ''}
+    <label class="f" for="e-date">Datum<input type="date" id="e-date" value="${e.date}"></label>
+    <div class="grid2">
+      <label class="f" for="e-start">Beginn<input type="time" id="e-start" value="${e.start}"></label>
+      <label class="f" for="e-end">Ende<input type="time" id="e-end" value="${e.end}"></label>
+    </div>
+    <div class="row"><span class="muted small">Dauer:</span><b class="num" id="e-dur"></b><span class="grow"></span></div>
+    <div class="chips" aria-label="Dauer schnell setzen">${[30, 45, 60, 90, 120, 180].map((m) => `<button type="button" class="chip" data-s="setDur" data-m="${m}" style="min-height:36px;padding:5px 12px">${m < 60 ? m + ' min' : fmtDec(m, 1) + ' h'}</button>`).join('')}</div>
+    <div class="stack"><span class="tf-label">Label</span><div id="e-labels">${labelChips(e.labelId, 'data-s="label"', false)}</div></div>
+    <label class="f" for="e-note">Notiz<input type="text" id="e-note" value="${esc(e.note)}" placeholder="z. B. 9c Deutsch, Elternabend …" autocomplete="off"></label>
+    <div class="sheet-actions">
+      ${isNew ? '<button class="btn" data-s="cancel">Abbrechen</button>' : '<button class="btn danger" data-s="delete">Löschen</button>'}
+      <button class="btn primary" data-s="save">Speichern</button></div>`;
+  openSheet(html(), (b) => {
+    const upd = () => {
+      const s = $('#e-start', b).value, en = $('#e-end', b).value;
+      $('#e-dur', b).textContent = s && en ? fmtDur(dur({ start: s, end: en })) + (toMin(en) < toMin(s) ? ' (bis nach Mitternacht)' : '') : '–';
+    };
+    upd();
+    b.oninput = upd;
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      const act = a.dataset.s;
+      if (act === 'label') { e.labelId = a.dataset.id; b.querySelectorAll('[data-s="label"]').forEach((x) => x.setAttribute('aria-pressed', x.dataset.id === e.labelId)); }
+      if (act === 'setDur') { const s = $('#e-start', b).value; if (s) { $('#e-end', b).value = fromMin(toMin(s) + +a.dataset.m); upd(); } }
+      if (act === 'cancel') closeSheet();
+      if (act === 'delete') { closeSheet(); deleteEntry(entry.id); }
+      if (act === 'save') {
+        const date = $('#e-date', b).value, start = $('#e-start', b).value, end = $('#e-end', b).value;
+        if (!date || !start || !end) return toast('Bitte Datum, Beginn und Ende ausfüllen.');
+        if (start === end) return toast('Beginn und Ende sind gleich.');
+        const out = { ...e, date, start, end, note: $('#e-note', b).value.trim() };
+        if (isNew) { out.id = uid(); S.entries.push(out); }
+        else {
+          const i = S.entries.findIndex((x) => x.id === entry.id);
+          if (out.planKey && date !== entry.date) { S.planSkip.push(out.planKey); delete out.planKey; out.source = 'manual'; }
+          S.entries[i] = out;
+        }
+        S.lastLabel = out.labelId;
+        save(); closeSheet(); render();
+        toast(isNew ? `Gespeichert: ${fmtDur(dur(out))} ${labelById(out.labelId).name}` : 'Änderungen gespeichert');
+      }
+    };
+  });
+}
+function deleteEntry(id) {
+  const i = S.entries.findIndex((x) => x.id === id);
+  if (i < 0) return;
+  const [e] = S.entries.splice(i, 1);
+  if (e.planKey) S.planSkip.push(e.planKey);
+  save(); render();
+  toast('Eintrag gelöscht', () => {
+    S.entries.push(e);
+    if (e.planKey) S.planSkip = S.planSkip.filter((k) => k !== e.planKey);
+    save(); render();
+  });
+}
+
+/* Stundenplan-Stunde */
+function slotSheet(slot) {
+  const isNew = !slot;
+  const s = slot ? { ...slot } : { wd: ui.planDay, start: S.periods[0]?.start || '08:00', end: S.periods[0]?.end || '08:45', pFrom: 0, pTo: 0, labelId: 'unterricht', title: '', validFrom: '', validTo: '' };
+  const days = new Set([s.wd]);
+  const perOpts = (sel) => `<option value="">frei</option>` + S.periods.map((p, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${i + 1}. (${p.start}–${p.end})</option>`).join('');
+  openSheet(`
+    <h2 id="sheet-title">${isNew ? 'Stunde hinzufügen' : 'Stunde bearbeiten'}</h2>
+    <div class="stack"><span class="tf-label">${isNew ? 'Wochentag(e)' : 'Wochentag'}</span>
+      <div class="seg" id="s-days">${[1, 2, 3, 4, 5, 6].map((d) => `<button type="button" data-s="day" data-d="${d}" aria-pressed="${days.has(d)}">${WD_SHORT[d]}</button>`).join('')}</div></div>
+    <div class="grid2">
+      <label class="f" for="s-pfrom">Von Stunde<select id="s-pfrom">${perOpts(s.pFrom)}</select></label>
+      <label class="f" for="s-pto">Bis Stunde<select id="s-pto">${perOpts(s.pTo)}</select></label>
+      <label class="f" for="s-start">Beginn<input type="time" id="s-start" value="${s.start}"></label>
+      <label class="f" for="s-end">Ende<input type="time" id="s-end" value="${s.end}"></label>
+    </div>
+    <label class="f" for="s-title">Bezeichnung<input type="text" id="s-title" value="${esc(s.title)}" placeholder="z. B. 8b Mathematik" autocomplete="off"></label>
+    <div class="stack"><span class="tf-label">Label</span>${labelChips(s.labelId, 'data-s="label"', false)}</div>
+    <details><summary class="small" style="cursor:pointer;font-weight:700">Gültigkeit (z. B. nur 1. Halbjahr)</summary>
+      <div class="grid2" style="margin-top:10px">
+        <label class="f" for="s-vfrom">Gültig ab<input type="date" id="s-vfrom" value="${esc(s.validFrom)}"></label>
+        <label class="f" for="s-vto">Gültig bis<input type="date" id="s-vto" value="${esc(s.validTo)}"></label></div></details>
+    <div class="sheet-actions">
+      ${isNew ? '<button class="btn" data-s="cancel">Abbrechen</button>' : '<button class="btn danger" data-s="delete">Löschen</button>'}
+      <button class="btn primary" data-s="save">Speichern</button></div>`, (b) => {
+    const pf = $('#s-pfrom', b), pt = $('#s-pto', b);
+    b.onchange = (ev) => {
+      if (ev.target === pf || ev.target === pt) {
+        let a = pf.value === '' ? null : +pf.value, z = pt.value === '' ? null : +pt.value;
+        if (a != null && (z == null || z < a)) { z = a; pt.value = String(a); }
+        if (a == null && z != null) { a = z; pf.value = String(z); }
+        if (a != null) { $('#s-start', b).value = S.periods[a].start; $('#s-end', b).value = S.periods[z].end; }
+      }
+      if (ev.target.id === 's-start' || ev.target.id === 's-end') { pf.value = ''; pt.value = ''; }
+    };
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      const act = a.dataset.s;
+      if (act === 'day') {
+        const d = +a.dataset.d;
+        if (isNew) { days.has(d) ? days.size > 1 && days.delete(d) : days.add(d); }
+        else { days.clear(); days.add(d); }
+        b.querySelectorAll('[data-s="day"]').forEach((x) => x.setAttribute('aria-pressed', days.has(+x.dataset.d)));
+      }
+      if (act === 'label') { s.labelId = a.dataset.id; b.querySelectorAll('[data-s="label"]').forEach((x) => x.setAttribute('aria-pressed', x.dataset.id === s.labelId)); }
+      if (act === 'cancel') closeSheet();
+      if (act === 'delete') {
+        closeSheet();
+        const idx = S.slots.findIndex((x) => x.id === slot.id);
+        const [old] = S.slots.splice(idx, 1);
+        save(); render();
+        toast('Stunde aus dem Stundenplan entfernt (bereits eingetragene Zeiten bleiben)', () => { S.slots.splice(idx, 0, old); save(); render(); });
+      }
+      if (act === 'save') {
+        const start = $('#s-start', b).value, end = $('#s-end', b).value;
+        if (!start || !end || start === end) return toast('Bitte Beginn und Ende angeben.');
+        const base = {
+          start, end, labelId: s.labelId, title: $('#s-title', b).value.trim(),
+          pFrom: pf.value === '' ? null : +pf.value, pTo: pt.value === '' ? null : +pt.value,
+          validFrom: $('#s-vfrom', b).value, validTo: $('#s-vto', b).value,
+        };
+        if (isNew) {
+          // Automatisch erst ab heute eintragen; Vergangenes über „Zeitraum eintragen“ nachholen.
+          for (const d of [...days].sort()) S.slots.push({ id: uid(), wd: d, autoFrom: today(), ...base });
+          ui.planDay = Math.min(...days);
+        } else {
+          const i = S.slots.findIndex((x) => x.id === slot.id);
+          S.slots[i] = { ...slot, ...base, wd: [...days][0] };
+        }
+        save(); closeSheet(); render(); autoFill();
+      }
+    };
+  });
+}
+
+/* Zeitraum aus Stundenplan eintragen */
+function fillSheet(from, to) {
+  const mon = monday(today());
+  from = from || mon; to = to || addDays(mon, 4);
+  openSheet(`
+    <h2 id="sheet-title">Stundenplan eintragen</h2>
+    <p class="muted small">Trägt alle festen Stunden im Zeitraum ein. Ferien, Feiertage und eigene freie Tage werden übersprungen, schon vorhandene oder gelöschte Stunden nicht doppelt eingetragen.</p>
+    <div class="grid2">
+      <label class="f" for="f-from">Von<input type="date" id="f-from" value="${from}"></label>
+      <label class="f" for="f-to">Bis<input type="date" id="f-to" value="${to}"></label></div>
+    <div class="chips">
+      <button type="button" class="chip" data-s="preset" data-p="week">Diese Woche</button>
+      <button type="button" class="chip" data-s="preset" data-p="next">Nächste Woche</button>
+      <button type="button" class="chip" data-s="preset" data-p="sy">Schuljahr bis heute</button></div>
+    <div id="f-warn"></div>
+    <div class="sheet-actions"><button class="btn" data-s="cancel">Abbrechen</button><button class="btn primary" data-s="go">Eintragen</button></div>`, (b) => {
+    const warn = async () => {
+      const f = $('#f-from', b).value, t = $('#f-to', b).value; if (!f || !t) return;
+      if (!S.state) { $('#f-warn', b).innerHTML = '<div class="banner">Kein Bundesland gewählt: Ferien werden nicht erkannt.</div>'; return; }
+      const miss = missingHolidayYears(f, t);
+      if (miss.length) {
+        $('#f-warn', b).innerHTML = '<p class="muted small">Lade Ferien …</p>';
+        const r = await ensureHolidays(miss);
+        $('#f-warn', b).innerHTML = r.ok ? '' : `<div class="banner">Ferien für ${r.failed.join(', ')} konnten nicht geladen werden. Es werden nur Feiertage und eigene freie Tage übersprungen.</div>`;
+      } else $('#f-warn', b).innerHTML = '';
+    };
+    warn();
+    b.onchange = warn;
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      if (a.dataset.s === 'preset') {
+        const t = today(); const m = monday(t); let f, to;
+        if (a.dataset.p === 'week') { f = m; to = addDays(m, 6); }
+        if (a.dataset.p === 'next') { f = addDays(m, 7); to = addDays(m, 13); }
+        if (a.dataset.p === 'sy') { const d = pd(t); f = `${d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1}-08-01`; to = t; }
+        $('#f-from', b).value = f; $('#f-to', b).value = to; warn();
+      }
+      if (a.dataset.s === 'cancel') closeSheet();
+      if (a.dataset.s === 'go') {
+        let f = $('#f-from', b).value, t = $('#f-to', b).value;
+        if (!f || !t) return toast('Bitte Zeitraum angeben.');
+        if (f > t) [f, t] = [t, f];
+        if (daysBetween(f, t) > 400) return toast('Bitte höchstens ein Jahr auf einmal.');
+        const res = generatePlan(f, t);
+        save(); closeSheet(); render();
+        const n = res.created.length;
+        toast(n ? `${n} ${n === 1 ? 'Stunde' : 'Stunden'} eingetragen${res.freeDays ? `, ${res.freeDays} freie Tage übersprungen` : ''}` : `Nichts Neues einzutragen${res.freeDays ? ` (${res.freeDays} freie Tage)` : ''}`, n ? () => undoCreate(res.created) : null);
+      }
+    };
+  });
+}
+
+/* Label anlegen / bearbeiten */
+function labelSheet(label, after) {
+  const isNew = !label;
+  const used = new Set(S.labels.map((l) => l.color));
+  const l = label ? { ...label } : { name: '', color: LABEL_COLORS.find((c) => !used.has(c)) || LABEL_COLORS[5] };
+  const inUse = label && (S.entries.some((e) => e.labelId === label.id) || S.slots.some((s) => s.labelId === label.id) || S.running?.labelId === label.id);
+  openSheet(`
+    <h2 id="sheet-title">${isNew ? 'Neues Label' : 'Label bearbeiten'}</h2>
+    <label class="f" for="l-name">Name<input type="text" id="l-name" value="${esc(l.name)}" placeholder="z. B. Konferenz, Elterngespräch" autocomplete="off" ${isNew ? 'autofocus' : ''}></label>
+    <div class="stack"><span class="tf-label">Farbe</span>
+      <div class="swatches">${LABEL_COLORS.map((c) => `<button type="button" class="swatch" data-s="color" data-c="${c}" style="background:${c}" aria-label="Farbe ${c}" aria-pressed="${c === l.color}"></button>`).join('')}</div></div>
+    ${!isNew ? `<label class="switch" for="l-hidden"><span><b>Ausblenden</b><br><span class="muted small">Erscheint nicht mehr zur Auswahl, bleibt aber in der Auswertung.</span></span><input type="checkbox" id="l-hidden" ${l.hidden ? 'checked' : ''}></label>` : ''}
+    ${!isNew && !l.preset && inUse ? '<p class="muted small">Dieses Label wird verwendet und kann daher nur ausgeblendet, nicht gelöscht werden.</p>' : ''}
+    <div class="sheet-actions">
+      ${!isNew && !l.preset && !inUse ? '<button class="btn danger" data-s="delete">Löschen</button>' : '<button class="btn" data-s="cancel">Abbrechen</button>'}
+      <button class="btn primary" data-s="save">Speichern</button></div>`, (b) => {
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      if (a.dataset.s === 'color') { l.color = a.dataset.c; b.querySelectorAll('.swatch').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === l.color)); }
+      if (a.dataset.s === 'cancel') closeSheet();
+      if (a.dataset.s === 'delete') { S.labels = S.labels.filter((x) => x.id !== label.id); save(); closeSheet(); render(); toast('Label gelöscht'); }
+      if (a.dataset.s === 'save') {
+        const name = $('#l-name', b).value.trim();
+        if (!name) return toast('Bitte einen Namen eingeben.');
+        if (S.labels.some((x) => x.name.toLowerCase() === name.toLowerCase() && x.id !== label?.id)) return toast('Ein Label mit diesem Namen gibt es schon.');
+        let id;
+        if (isNew) { id = 'l-' + uid(); S.labels.push({ id, name, color: l.color, preset: false, hidden: false }); }
+        else { id = label.id; Object.assign(S.labels.find((x) => x.id === id), { name, color: l.color, hidden: $('#l-hidden', b).checked }); }
+        save(); closeSheet();
+        if (after) after(id);
+        render();
+      }
+    };
+  });
+}
+
+function freeSheet() {
+  const t = today();
+  openSheet(`
+    <h2 id="sheet-title">Freie Tage hinzufügen</h2>
+    <label class="f" for="fr-name">Bezeichnung<input type="text" id="fr-name" placeholder="z. B. Beweglicher Ferientag" autocomplete="off"></label>
+    <div class="grid2"><label class="f" for="fr-from">Von<input type="date" id="fr-from" value="${t}"></label>
+      <label class="f" for="fr-to">Bis<input type="date" id="fr-to" value="${t}"></label></div>
+    <label class="switch" for="fr-del"><span><b>Bereits eingetragene Stundenplan-Zeiten entfernen</b><br><span class="muted small">Nur automatisch eingetragene Stunden in diesem Zeitraum.</span></span><input type="checkbox" id="fr-del" checked></label>
+    <div class="sheet-actions"><button class="btn" data-s="cancel">Abbrechen</button><button class="btn primary" data-s="save">Hinzufügen</button></div>`, (b) => {
+    b.onchange = (ev) => { if (ev.target.id === 'fr-from' && $('#fr-to', b).value < ev.target.value) $('#fr-to', b).value = ev.target.value; };
+    b.onclick = (ev) => {
+      const a = ev.target.closest('[data-s]'); if (!a) return;
+      if (a.dataset.s === 'cancel') closeSheet();
+      if (a.dataset.s === 'save') {
+        let f = $('#fr-from', b).value, to = $('#fr-to', b).value || f;
+        if (!f) return toast('Bitte ein Datum angeben.');
+        if (f > to) [f, to] = [to, f];
+        S.freeDays.push({ id: uid(), from: f, to, name: $('#fr-name', b).value.trim() || 'Freier Tag' });
+        let removed = 0;
+        if ($('#fr-del', b).checked) {
+          const before = S.entries.length;
+          S.entries = S.entries.filter((e) => !(e.source === 'plan' && e.date >= f && e.date <= to));
+          removed = before - S.entries.length;
+        }
+        save(); closeSheet(); render();
+        toast(removed ? `Gespeichert, ${removed} Stundenplan-Zeiten entfernt` : 'Freie Tage gespeichert');
+      }
+    };
+  });
+}
+
+/* ---------- Export / Import ---------- */
+async function shareOrDownload(name, text, type) {
+  try {
+    const file = new File([text], name, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      await navigator.share({ files: [file], title: name });
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    toast('Datei wird gespeichert. Falls nichts passiert: „kopieren“ nutzen.');
+  } catch (e) { toast('Speichern nicht möglich – bitte „kopieren“ nutzen.'); }
+}
+async function copyText(text, what) {
+  try { await navigator.clipboard.writeText(text); toast(`${what} in die Zwischenablage kopiert`); }
+  catch (e) {
+    openSheet(`<h2 id="sheet-title">${esc(what)}</h2><p class="muted small">Kopieren ist hier nicht erlaubt. Text markieren und manuell kopieren:</p>
+      <textarea id="copy-area" readonly>${esc(text)}</textarea><button class="btn" data-s="close">Schließen</button>`, (b) => {
+      const ta = $('#copy-area', b); ta.focus(); ta.select();
+      b.onclick = (ev) => { if (ev.target.closest('[data-s="close"]')) closeSheet(); };
+    });
+  }
+}
+function backupJson() { return JSON.stringify({ app: 'lehrkraft-zeiterfassung', exported: new Date().toISOString(), data: { ...S, running: S.running } }, null, 1); }
+function csvFor(list) {
+  const q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Datum', 'Wochentag', 'Beginn', 'Ende', 'Dauer (h)', 'Dauer (h:mm)', 'Label', 'Notiz', 'Quelle'].join(';')];
+  for (const e of list.slice().sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))) {
+    rows.push([fmtDate(e.date), WD_SHORT[wd(e.date)], e.start, e.end, fmtDec(dur(e), 2), fmtDur(dur(e)).replace(' h', ''), q(labelById(e.labelId).name), q(e.note),
+      e.source === 'plan' ? 'Stundenplan' : e.source === 'timer' ? 'Timer' : 'manuell'].join(';'));
+  }
+  return '﻿' + rows.join('\r\n');
+}
+function reportEntries() {
+  const [from, to] = repRange();
+  const sel = ui.rep.labels ? new Set(ui.rep.labels) : null;
+  return S.entries.filter((e) => e.date >= from && e.date <= to && (!sel || sel.has(e.labelId)));
+}
+function importData(text) {
+  let obj;
+  try { obj = JSON.parse(text); } catch (e) { return toast('Das ist keine gültige Sicherungsdatei.'); }
+  const data = obj && obj.data ? obj.data : obj;
+  if (!data || !Array.isArray(data.entries) || !Array.isArray(data.labels)) return toast('Die Datei enthält keine Zeiterfassungs-Daten.');
+  confirmSheet({
+    title: 'Sicherung einlesen?',
+    text: `Die Sicherung enthält ${data.entries.length} Einträge. Deine aktuellen Daten (${S.entries.length} Einträge) werden dabei ersetzt.`,
+    ok: 'Ersetzen', onOk: () => { S = migrate(data); save(); render(); toast('Sicherung eingelesen'); },
+  });
+}
+
+/* ---------- Aktionen ---------- */
+function stepField(which, delta) {
+  const inp = $('#t-' + which); if (!inp) return;
+  const base = inp.value || hm(new Date());
+  inp.value = fromMin(toMin(base) + delta);
+  ui[which + 'Val'] = inp.value;
+  setDirty(which, true);
+}
+function setDirty(which, v) {
+  ui[which + 'Dirty'] = v;
+  const now = $(`#t-${which}-now`), hint = $(`#t-${which}-hint`);
+  if (now) now.hidden = !v;
+  if (hint) hint.hidden = v;
+  tick();
+}
+
+const actions = {
+  tab: (a) => { ui.tab = a.dataset.id; try { localStorage.setItem(STORE_KEY + '-tab', ui.tab); } catch (e) { /* egal */ } render(); window.scrollTo(0, 0); },
+  closeSheet: () => closeSheet(),
+  timerLabel: (a) => { ui.timerLabel = a.dataset.id; document.querySelectorAll('[data-a="timerLabel"]').forEach((x) => x.setAttribute('aria-pressed', x.dataset.id === ui.timerLabel)); },
+  runLabel: (a) => { S.running.labelId = a.dataset.id; S.lastLabel = a.dataset.id; save(); render(); },
+  tfStep: (a) => stepField(a.dataset.f, +a.dataset.d),
+  tfNow: (a) => setDirty(a.dataset.f, false),
+  startTimer: () => {
+    const now = new Date();
+    let date = iso(now);
+    const t = ui.startDirty ? ($('#t-start').value || hm(now)) : hm(now);
+    // Liegt die eingestellte Zeit nach „jetzt“ und ist es früh am Morgen, war vermutlich gestern Abend gemeint.
+    if (ui.startDirty && toMin(t) > nowMin() && nowMin() < 360) date = addDays(date, -1);
+    S.running = { start: `${date}T${t}`, labelId: ui.timerLabel, note: ($('#t-note')?.value || '').trim() };
+    S.lastLabel = ui.timerLabel;
+    ui.startDirty = false; ui.endDirty = false;
+    save(); render();
+  },
+  stopTimer: () => {
+    const run = S.running; if (!run) return;
+    const [date, start] = run.start.split('T');
+    const end = ui.endDirty ? ($('#t-end').value || hm(new Date())) : hm(new Date());
+    const e = { id: uid(), date, start, end, labelId: run.labelId, note: run.note || '', source: 'timer' };
+    const startMs = new Date(run.start).getTime();
+    if (dur(e) === 0) return toast('Ende ist gleich Beginn – nichts gespeichert.');
+    if (Date.now() - startMs > 26 * 3600e3) toast('Hinweis: Der Timer lief über einen Tag. Bitte Eintrag prüfen.');
+    S.entries.push(e); S.running = null; ui.endDirty = false;
+    save(); render();
+    toast(`Gespeichert: ${fmtDur(dur(e))} ${labelById(e.labelId).name}`, () => { S.entries = S.entries.filter((x) => x.id !== e.id); S.running = run; save(); render(); });
+  },
+  discardTimer: () => confirmSheet({ title: 'Timer verwerfen?', text: 'Die laufende Zeit wird nicht gespeichert.', ok: 'Verwerfen', onOk: () => { S.running = null; save(); render(); } }),
+  newEntry: (a) => entrySheet(null, a.dataset.date),
+  editEntry: (a) => entrySheet(S.entries.find((e) => e.id === a.dataset.id)),
+  week: (a) => { const d = +a.dataset.d; ui.weekOff = d === 0 ? 0 : ui.weekOff + d; render(); },
+  fillWeek: (a) => fillSheet(a.dataset.from, a.dataset.to),
+  fillRange: () => fillSheet(),
+  planDay: (a) => { ui.planDay = +a.dataset.d; render(); },
+  newSlot: () => slotSheet(null),
+  editSlot: (a) => slotSheet(S.slots.find((s) => s.id === a.dataset.id)),
+  repMode: (a) => { ui.rep.mode = a.dataset.m; ui.rep.off = 0; ui.rep.sel = -1; render(); },
+  repStep: (a) => { const d = +a.dataset.d; ui.rep.off = d === 0 ? 0 : ui.rep.off + d; ui.rep.sel = -1; render(); },
+  repLabel: (a) => {
+    const all = [...document.querySelectorAll('[data-a="repLabel"]')].map((x) => x.dataset.id);
+    const cur = new Set(ui.rep.labels || all);
+    cur.has(a.dataset.id) ? cur.delete(a.dataset.id) : cur.add(a.dataset.id);
+    ui.rep.labels = [...cur]; ui.rep.sel = -1; render();
+  },
+  repAll: () => { ui.rep.labels = null; render(); },
+  repNone: () => { ui.rep.labels = []; render(); },
+  csv: () => { const [f, t] = repRange(); shareOrDownload(`Arbeitszeit_${f}_bis_${t}.csv`, csvFor(reportEntries()), 'text/csv'); },
+  csvCopy: () => copyText(csvFor(reportEntries()).replace('﻿', ''), 'CSV'),
+  newLabel: () => labelSheet(null, (id) => { if (ui.tab === 'heute' && !S.running) ui.timerLabel = id; }),
+  editLabel: (a) => labelSheet(S.labels.find((l) => l.id === a.dataset.id)),
+  loadHolidays: async (a) => {
+    const d = pd(today()); const y = d.getFullYear();
+    toast('Lade Ferien …');
+    const r = await ensureHolidays([String(y - 1), String(y), String(y + 1)], !!a.dataset.force);
+    toast(r.ok ? 'Ferien geladen' : `Ferien konnten nicht geladen werden${r.failed ? ' (' + r.failed.join(', ') + ')' : ''}. Bitte später erneut versuchen oder freie Tage selbst eintragen.`);
+    render(); autoFill();
+  },
+  newFree: () => freeSheet(),
+  delFree: (a) => { const f = S.freeDays.find((x) => x.id === a.dataset.id); S.freeDays = S.freeDays.filter((x) => x.id !== a.dataset.id); save(); render(); toast('Freie Tage entfernt', () => { S.freeDays.push(f); save(); render(); }); },
+  addPeriod: () => { const last = S.periods[S.periods.length - 1]; const s = last ? toMin(last.end) + 5 : 480; S.periods.push({ start: fromMin(s), end: fromMin(s + 45) }); save(); render(); },
+  delPeriod: () => { S.periods.pop(); save(); render(); },
+  exportJson: () => shareOrDownload(`Zeiterfassung_Sicherung_${today()}.json`, backupJson(), 'application/json'),
+  exportCopy: () => copyText(backupJson(), 'Sicherung'),
+  importPaste: () => openSheet(`<h2 id="sheet-title">Sicherung einfügen</h2><p class="muted small">Füge hier den Text einer Sicherung ein.</p>
+      <textarea id="imp-text" placeholder='{"app":"lehrkraft-zeiterfassung", …}'></textarea>
+      <div class="sheet-actions"><button class="btn" data-s="cancel">Abbrechen</button><button class="btn primary" data-s="go">Einlesen</button></div>`, (b) => {
+    b.onclick = (ev) => { const x = ev.target.closest('[data-s]'); if (!x) return; const txt = $('#imp-text', b).value; closeSheet(); if (x.dataset.s === 'go') importData(txt); };
+  }),
+  wipe: () => confirmSheet({ title: 'Alle Daten löschen?', text: 'Alle Einträge, der Stundenplan, eigene Labels und Einstellungen werden von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen.', ok: 'Alles löschen',
+    onOk: () => { S = defaults(); save(); render(); toast('Alle Daten gelöscht'); } }),
+  dismissOnboarding: () => { S.onboarded = true; save(); render(); },
+};
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-a]');
+  if (!a) return;
+  const fn = actions[a.dataset.a];
+  if (fn) { e.preventDefault(); fn(a, e); }
+});
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.dataset.tf) { ui[t.dataset.tf + 'Val'] = t.value; setDirty(t.dataset.tf, true); }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target, c = t.dataset.c;
+  if (t.id === 't-runstart' && S.running && t.value) {
+    const [d] = S.running.start.split('T');
+    let date = d;
+    if (d === today() && toMin(t.value) > nowMin() + 1 && nowMin() < 360) date = addDays(d, -1);
+    S.running.start = `${date}T${t.value}`; save(); tick(); return;
+  }
+  if (!c) return;
+  if (c === 'planAuto') {
+    S.plan.auto = t.checked;
+    if (t.checked && !S.plan.from) S.plan.from = today();
+    if (t.checked) S.slots.forEach((s) => { s.autoFrom = ''; });
+    save(); render(); autoFill();
+  }
+  if (c === 'planFrom') { S.plan.from = t.value; S.slots.forEach((s) => { s.autoFrom = ''; }); save(); autoFill(); }
+  if (c === 'repFrom') { ui.rep.from = t.value; render(); }
+  if (c === 'repTo') { ui.rep.to = t.value; render(); }
+  if (c === 'state') {
+    S.state = t.value; S.holidays = {}; save(); render();
+    if (S.state) actions.loadHolidays({ dataset: {} });
+  }
+  if (c === 'perStart' || c === 'perEnd') { const p = S.periods[+t.dataset.i]; if (t.value) p[c === 'perStart' ? 'start' : 'end'] = t.value; save(); }
+  if (c === 'importFile' && t.files && t.files[0]) {
+    const r = new FileReader(); r.onload = () => importData(String(r.result)); r.readAsText(t.files[0]); t.value = '';
+  }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg, undo) {
+  const el = $('#toast');
+  el.innerHTML = `<span>${esc(msg)}</span>${undo ? '<button type="button">Rückgängig</button>' : ''}`;
+  el.hidden = false;
+  if (undo) el.querySelector('button').onclick = () => { el.hidden = true; undo(); };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, undo ? 6500 : 3200);
+}
+
+/* ---------- Start ---------- */
+render();
+autoFill();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (ui.tab === 'heute') render(); autoFill(); } });
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { /* egal */ }
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in eingebetteten Vorschauen nicht erlaubt */ });
+}
+</script>
+</body>
+</html>
