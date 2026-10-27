@@ -4,9 +4,6 @@
 
 Klangkulissen, Musik und Soundeffekte für Tabletop-Rollenspiele – gebaut für das iPad.
 
-> Im Ordner [`bratsche/`](bratsche/README.md) liegt außerdem **Bratsche ahoi!**, ein Übungsbegleiter für die Bratsche
-> (Stimmen, Intonation, Notenlesen im Bratschenschlüssel, Shanties) – erreichbar unter `…/bratsche/`.
-
 Das Cerebros Soundboard ist eine Web-App (PWA): Man öffnet sie in Safari, legt sie auf den Home-Bildschirm
 und nutzt sie dann wie eine normale App – im Vollbild und offline. Ein Mac, Xcode oder der App Store
 sind nicht nötig.
